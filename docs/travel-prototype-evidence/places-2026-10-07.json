@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-10-07T09:20:19.955Z",
+  "city": "Torino, Italy",
+  "method": "explicit_names_and_source_quotes; Nominatim_candidates; no_auto_confirmation",
+  "source_notes": 3,
+  "places": [
+    {
+      "source_id": "6abcd3ba000000000a01fb7e",
+      "name": "Ristorante cinese pizzeria Fiorita Borgo Dora Snc",
+      "has_source_address": true,
+      "map_status": "candidates",
+      "candidate_count": 1,
+      "match_basis": [
+        "address"
+      ],
+      "warnings": [
+        "地图仅匹配到地址，尚未确认是这家店",
+        "部分地图候选的门牌与原帖不一致或缺失，请核对地址"
+      ],
+      "confirmed": false
+    },
+    {
+      "source_id": "6abcd3ba000000000a01fb7e",
+      "name": "Bar Antico Borgo Antico Borgo Caffè",
+      "has_source_address": true,
+      "map_status": "candidates",
+      "candidate_count": 1,
+      "match_basis": [
+        "address"
+      ],
+      "warnings": [
+        "地图仅匹配到地址，尚未确认是这家店"
+      ],
+      "confirmed": false
+    },
+    {
+      "source_id": "6abcd3ba000000000a01fb7e",
+      "name": "Al Jazira",
+      "has_source_address": true,
+      "map_status": "candidates",
+      "candidate_count": 1,
+      "match_basis": [
+        "name"
+      ],
+      "warnings": [
+        "部分地图候选的街道与原帖不一致，请核对地点"
+      ],
+      "confirmed": false
+    },
+    {
+      "source_id": "6abcd3ba000000000a01fb7e",
+      "name": "阿武小吃",
+      "has_source_address": true,
+      "map_status": "candidates",
+      "candidate_count": 1,
+      "match_basis": [
+        "address"
+      ],
+      "warnings": [
+        "地图仅匹配到地址，尚未确认是这家店"
+      ],
+      "confirmed": false
+    },
+    {
+      "source_id": "6ac4ec76000000000a0224b1",
+      "name": "la parentesi bistrot",
+      "has_source_address": false,
+      "map_status": "not_found",
+      "candidate_count": 0,
+      "match_basis": [],
+      "warnings": [
+        "原帖未给出明确地址"
+      ],
+      "confirmed": false
+    },
+    {
+      "source_id": "6a24184d000000001002d000",
+      "name": "家",
+      "has_source_address": false,
+      "map_status": "needs_details",
+      "candidate_count": 0,
+      "match_basis": [],
+      "warnings": [
+        "原帖未给出明确地址",
+        "名称过于简短，需补充地址后匹配"
+      ],
+      "confirmed": false
+    }
+  ]
+}

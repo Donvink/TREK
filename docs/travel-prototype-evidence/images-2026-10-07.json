@@ -1,0 +1,34 @@
+{
+  "collected_at": "2026-10-07T08:34:21.138Z",
+  "query": "都灵 美食 攻略",
+  "notes": [
+    {
+      "source_id": "6abcd3ba000000000a01fb7e",
+      "images_saved": 15,
+      "images_failed": 0
+    },
+    {
+      "source_id": "6ac4ec76000000000a0224b1",
+      "images_saved": 7,
+      "images_failed": 0
+    },
+    {
+      "source_id": "6a24184d000000001002d000",
+      "images_saved": 12,
+      "images_failed": 0
+    }
+  ],
+  "images_saved": 34,
+  "total_bytes": 6567486,
+  "raw_images_directory": ".local/travel-sources/images",
+  "python_tests_passed": 14,
+  "backend_tests_passed": 7,
+  "api_images_verified": 34,
+  "anonymous_image_status": 401,
+  "ui_json_duplicate_skipped": 3,
+  "ui_image_upload_verified": 1,
+  "desktop_image_elements": 34,
+  "mobile_image_elements": 34,
+  "mobile_first_image_decoded": true,
+  "mobile_horizontal_overflow": false
+}

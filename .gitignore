@@ -45,6 +45,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # Runtime data
+.local/
+__pycache__/
+*.pyc
 *.pid
 *.seed
 *.pid.lock

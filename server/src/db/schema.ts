@@ -79,6 +79,32 @@ function createTables(db: Database.Database): void {
       UNIQUE(user_id, key)
     );
 
+    CREATE TABLE IF NOT EXISTS travel_sources (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      source_id TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      collected_at TEXT NOT NULL,
+      PRIMARY KEY(user_id, source_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_place_extractions (
+      user_id INTEGER NOT NULL,
+      source_id TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      PRIMARY KEY(user_id, source_id),
+      FOREIGN KEY(user_id, source_id) REFERENCES travel_sources(user_id, source_id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_source_images (
+      user_id INTEGER NOT NULL,
+      source_id TEXT NOT NULL,
+      image_id TEXT NOT NULL,
+      content_type TEXT NOT NULL,
+      data BLOB NOT NULL,
+      PRIMARY KEY(user_id, source_id, image_id),
+      FOREIGN KEY(user_id, source_id) REFERENCES travel_sources(user_id, source_id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS trips (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

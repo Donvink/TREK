@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-07T11:16:51.425Z",
+  "source_id": "6a24184d000000001002d000",
+  "name": "House Jia",
+  "address": "Via Giuseppe Luigi Passalacqua, 4/A, 10122 Torino",
+  "identity_method": "manual_reading_of_saved_note_image",
+  "image_order": 10,
+  "image_id": "500b42e766e9ce6114b02d1f251ee1e271467f739280c9fed133b7f811c22f34",
+  "official_source": "https://housejia.it/",
+  "map_candidates": 1,
+  "map_confirmed": false,
+  "regression_tests_passed": 18,
+  "warnings": [],
+  "browser_name_and_image_evidence_verified": true
+}

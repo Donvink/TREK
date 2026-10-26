@@ -155,6 +155,8 @@ export async function buildApp(): Promise<INestApplication> {
    * limit.
    */
   const bookBody = express.json({ limit: '8mb', verify: rawBodyKeeper });
+  const travelSourceBody = express.json({ limit: '3mb', verify: rawBodyKeeper });
+  const travelImageBody = express.raw({ limit: '8mb', type: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] });
   const listFileBody = express.json({ limit: MAX_COLLECTION_FILE_BYTES * 2, verify: rawBodyKeeper });
   const json = express.json({ limit: '100kb', verify: rawBodyKeeper });
   const urlencoded = express.urlencoded({ limit: '100kb', extended: true, verify: rawBodyKeeper });
@@ -165,6 +167,8 @@ export async function buildApp(): Promise<INestApplication> {
     req.method === 'POST' && /^\/api\/addons\/collections\/(import|gpx\/read|\d+\/import)$/.test(req.path);
 
   instance.use(function jsonParser(req: Request, res: Response, next: NextFunction) {
+    if (req.method === 'POST' && /^\/api\/travel-sources\/[a-f0-9]{24}\/images\/[a-f0-9]{64}$/.test(req.path)) return travelImageBody(req, res, next);
+    if (req.method === 'POST' && req.path === '/api/travel-sources/import') return travelSourceBody(req, res, next);
     if (isBookWrite(req)) return bookBody(req, res, next);
     if (isListFile(req)) return listFileBody(req, res, next);
     return isMcp(req) ? next() : json(req, res, next);

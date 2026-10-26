@@ -1,0 +1,155 @@
+{
+  "checked_at": "2026-10-06T21:10:34.282346+00:00",
+  "purpose": "current coverage only; not September 2026 reconstruction",
+  "stations": {
+    "bellinzona": "Bellinzona",
+    "turin": "TORINO PORTA NUOVA",
+    "interlaken": "Interlaken Ost"
+  },
+  "routes": [
+    {
+      "from": "bellinzona",
+      "to": "turin",
+      "test_departure": "2026-10-08T07:00:00+00:00",
+      "status": "routes_returned",
+      "scheduled_itineraries": 3,
+      "sample": [
+        {
+          "start": "2026-10-08T07:07:00Z",
+          "end": "2026-10-08T10:11:00Z",
+          "transfers": 1,
+          "modes": [
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK",
+            "HIGHSPEED_RAIL",
+            "WALK"
+          ]
+        },
+        {
+          "start": "2026-10-08T07:08:00Z",
+          "end": "2026-10-08T10:11:00Z",
+          "transfers": 2,
+          "modes": [
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK",
+            "HIGHSPEED_RAIL",
+            "WALK"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "turin",
+      "to": "bellinzona",
+      "test_departure": "2026-10-08T07:00:00+00:00",
+      "status": "routes_returned",
+      "scheduled_itineraries": 3,
+      "sample": [
+        {
+          "start": "2026-10-08T07:09:00Z",
+          "end": "2026-10-08T10:44:00Z",
+          "transfers": 2,
+          "modes": [
+            "WALK",
+            "HIGHSPEED_RAIL",
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK"
+          ]
+        },
+        {
+          "start": "2026-10-08T07:09:00Z",
+          "end": "2026-10-08T10:23:00Z",
+          "transfers": 3,
+          "modes": [
+            "WALK",
+            "HIGHSPEED_RAIL",
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "bellinzona",
+      "to": "interlaken",
+      "test_departure": "2026-10-08T07:00:00+00:00",
+      "status": "routes_returned",
+      "scheduled_itineraries": 3,
+      "sample": [
+        {
+          "start": "2026-10-08T07:10:00Z",
+          "end": "2026-10-08T11:03:00Z",
+          "transfers": 1,
+          "modes": [
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK"
+          ]
+        },
+        {
+          "start": "2026-10-08T07:10:00Z",
+          "end": "2026-10-08T10:58:00Z",
+          "transfers": 2,
+          "modes": [
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "interlaken",
+      "to": "bellinzona",
+      "test_departure": "2026-10-08T07:00:00+00:00",
+      "status": "routes_returned",
+      "scheduled_itineraries": 3,
+      "sample": [
+        {
+          "start": "2026-10-08T07:00:00Z",
+          "end": "2026-10-08T10:48:00Z",
+          "transfers": 2,
+          "modes": [
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK",
+            "SUBURBAN",
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK"
+          ]
+        },
+        {
+          "start": "2026-10-08T08:00:00Z",
+          "end": "2026-10-08T11:48:00Z",
+          "transfers": 1,
+          "modes": [
+            "WALK",
+            "REGIONAL_RAIL",
+            "WALK",
+            "LONG_DISTANCE",
+            "WALK"
+          ]
+        }
+      ]
+    }
+  ]
+}
