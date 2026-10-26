@@ -677,7 +677,6 @@ const admin: TranslationStrings = {
   'admin.github.hideDetails': 'Ocultar detalles',
   'admin.github.loadMore': 'Cargar más',
   'admin.github.loading': 'Cargando...',
-  'admin.github.support': 'Ayuda a seguir desarrollando TREK',
   'admin.github.error': 'No se pudieron cargar las versiones',
   'admin.github.by': 'por',
   'admin.update.available': 'Actualización disponible',

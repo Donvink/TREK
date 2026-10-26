@@ -40,32 +40,22 @@ afterEach(() => {
 });
 
 describe('GitHubPanel', () => {
-  it('FE-ADMIN-GH-001: support link cards always render', async () => {
+  it('FE-ADMIN-GH-001: community link cards always render, without donation links', async () => {
     render(<GitHubPanel />);
     await waitFor(() =>
       expect(screen.queryByRole('status')).not.toBeInTheDocument(),
     );
-    expect(screen.getByText('Ko-fi')).toBeInTheDocument();
-    expect(screen.getByText('Buy Me a Coffee')).toBeInTheDocument();
+    expect(screen.queryByText('Ko-fi')).not.toBeInTheDocument();
+    expect(screen.queryByText('Buy Me a Coffee')).not.toBeInTheDocument();
     expect(screen.getByText('Discord')).toBeInTheDocument();
     expect(screen.getByText('Report a Bug')).toBeInTheDocument();
     expect(screen.getByText('Feature Request')).toBeInTheDocument();
     expect(screen.getByText('Wiki')).toBeInTheDocument();
   });
 
-  it('FE-ADMIN-GH-002: all support links have correct href and target=_blank', async () => {
+  it('FE-ADMIN-GH-002: all community links have correct href and target=_blank', async () => {
     render(<GitHubPanel />);
     await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
-
-    const kofi = screen.getByText('Ko-fi').closest('a')!;
-    expect(kofi).toHaveAttribute('href', 'https://ko-fi.com/mauriceboe');
-    expect(kofi).toHaveAttribute('target', '_blank');
-    expect(kofi).toHaveAttribute('rel', 'noopener noreferrer');
-
-    const bmc = screen.getByText('Buy Me a Coffee').closest('a')!;
-    expect(bmc).toHaveAttribute('href', 'https://buymeacoffee.com/mauriceboe');
-    expect(bmc).toHaveAttribute('target', '_blank');
-    expect(bmc).toHaveAttribute('rel', 'noopener noreferrer');
 
     const discord = screen.getByText('Discord').closest('a')!;
     expect(discord).toHaveAttribute('href', 'https://discord.gg/NhZBDSd4qW');
@@ -270,13 +260,9 @@ describe('GitHubPanel', () => {
     expect(anchor).toHaveAttribute('href', '#');
   });
 
-  it('FE-ADMIN-GH-016: support card hover effects fire without error', async () => {
+  it('FE-ADMIN-GH-016: community card hover effects fire without error', async () => {
     render(<GitHubPanel />);
     await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
-
-    const kofiLink = screen.getByText('Ko-fi').closest('a')!;
-    fireEvent.mouseEnter(kofiLink);
-    fireEvent.mouseLeave(kofiLink);
 
     const discordLink = screen.getByText('Discord').closest('a')!;
     fireEvent.mouseEnter(discordLink);
@@ -294,12 +280,8 @@ describe('GitHubPanel', () => {
     fireEvent.mouseEnter(wikiLink);
     fireEvent.mouseLeave(wikiLink);
 
-    const bmcLink = screen.getByText('Buy Me a Coffee').closest('a')!;
-    fireEvent.mouseEnter(bmcLink);
-    fireEvent.mouseLeave(bmcLink);
-
     // All links still visible
-    expect(screen.getByText('Ko-fi')).toBeInTheDocument();
+    expect(screen.getByText('Discord')).toBeInTheDocument();
   });
 
   it('FE-ADMIN-GH-012: clicking "Load more" appends next page', async () => {

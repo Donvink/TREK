@@ -738,7 +738,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Yükleniyor...',
   'admin.github.error': 'Sürümler yüklenemedi',
   'admin.github.by': 'ile',
-  'admin.github.support': "TREK'i geliştirmeye devam etmeme yardımcı oluyor",
   'admin.update.available': 'Güncelleme mevcut',
   'admin.update.text': 'TREK {version} mevcut. {current} çalıştırıyorsunuz.',
   'admin.update.button': "GitHub'da görüntüle",

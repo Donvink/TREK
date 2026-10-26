@@ -19,16 +19,10 @@ describe('AboutTab', () => {
     expect(screen.getByText('v2.9.10')).toBeInTheDocument();
   });
 
-  it('FE-COMP-ABOUT-003: displays Ko-fi link with correct href', () => {
+  it('FE-COMP-ABOUT-003: shows no donation links', () => {
     render(<AboutTab appVersion="2.9.10" />);
-    const link = screen.getByText('Ko-fi').closest('a');
-    expect(link).toHaveAttribute('href', 'https://ko-fi.com/mauriceboe');
-  });
-
-  it('FE-COMP-ABOUT-004: displays Buy Me a Coffee link with correct href', () => {
-    render(<AboutTab appVersion="2.9.10" />);
-    const link = screen.getByText('Buy Me a Coffee').closest('a');
-    expect(link).toHaveAttribute('href', 'https://buymeacoffee.com/mauriceboe');
+    expect(screen.queryByText('Ko-fi')).toBeNull();
+    expect(screen.queryByText('Buy Me a Coffee')).toBeNull();
   });
 
   it('FE-COMP-ABOUT-005: displays Discord link with correct href', () => {
@@ -60,7 +54,7 @@ describe('AboutTab', () => {
   it('FE-COMP-ABOUT-009: all external links have rel="noopener noreferrer"', () => {
     render(<AboutTab appVersion="2.9.10" />);
     const links = document.querySelectorAll('a');
-    expect(links).toHaveLength(6);
+    expect(links).toHaveLength(4);
     links.forEach((link) => {
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
@@ -78,28 +72,6 @@ describe('AboutTab', () => {
     render(<AboutTab appVersion="1.0.0" />);
     expect(screen.getByText('v1.0.0')).toBeInTheDocument();
     expect(screen.queryByText('v2.9.10')).toBeNull();
-  });
-
-  it('FE-COMP-ABOUT-012: Ko-fi link hover changes border and box-shadow styles', () => {
-    render(<AboutTab appVersion="1.0.0" />);
-    const link = screen.getByText('Ko-fi').closest('a') as HTMLAnchorElement;
-    fireEvent.mouseEnter(link);
-    expect(link.style.borderColor).toBe('rgb(255, 94, 91)');
-    expect(link.style.boxShadow).not.toBe('');
-    fireEvent.mouseLeave(link);
-    expect(link.style.borderColor).toBe('var(--border-primary)');
-    expect(link.style.boxShadow).toBe('none');
-  });
-
-  it('FE-COMP-ABOUT-013: Buy Me a Coffee link hover changes border and box-shadow styles', () => {
-    render(<AboutTab appVersion="1.0.0" />);
-    const link = screen.getByText('Buy Me a Coffee').closest('a') as HTMLAnchorElement;
-    fireEvent.mouseEnter(link);
-    expect(link.style.borderColor).toBe('rgb(255, 221, 0)');
-    expect(link.style.boxShadow).not.toBe('');
-    fireEvent.mouseLeave(link);
-    expect(link.style.borderColor).toBe('var(--border-primary)');
-    expect(link.style.boxShadow).toBe('none');
   });
 
   it('FE-COMP-ABOUT-014: Discord link hover changes border and box-shadow styles', () => {

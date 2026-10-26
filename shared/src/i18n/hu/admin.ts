@@ -700,7 +700,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Betöltés...',
   'admin.github.error': 'Nem sikerült betölteni a kiadásokat',
   'admin.github.by': 'készítette',
-  'admin.github.support': 'Segít fenntartani a TREK fejlesztését',
   'admin.update.available': 'Frissítés elérhető',
   'admin.update.text': 'A TREK {version} elérhető. Jelenleg a {current} verziót használod.',
   'admin.update.button': 'Megtekintés a GitHubon',

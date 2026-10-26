@@ -18,8 +18,6 @@
   <Icon>https://raw.githubusercontent.com/liketrek/TREK/main/docs/trek-icon.png</Icon>
   <ExtraParams/>
   <PostArgs/>
-  <DonateText>Support TREK development</DonateText>
-  <DonateLink>https://ko-fi.com/mauriceboe</DonateLink>
   <Requires/>
 
   <!-- Ports & Volumes -->

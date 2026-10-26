@@ -751,7 +751,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Φόρτωση...',
   'admin.github.error': 'Αποτυχία φόρτωσης εκδόσεων',
   'admin.github.by': 'από',
-  'admin.github.support': 'Βοηθά να συνεχίσω την ανάπτυξη του TREK',
   'admin.update.available': 'Διαθέσιμη ενημέρωση',
   'admin.update.text': 'Το TREK {version} είναι διαθέσιμο. Εκτελείτε το {current}.',
   'admin.update.button': 'Προβολή στο GitHub',

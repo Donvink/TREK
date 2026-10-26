@@ -2,8 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 
-// jsdom lays nothing out, so the rules themselves are the assertion, the way
-// releaseNoticeCss.test.ts pins the notice's stacking.
+// jsdom lays nothing out, so the rules themselves are the assertion.
 describe('dashboard css', () => {
   const css = readFileSync(resolve(process.cwd(), 'src/styles/dashboard.css'), 'utf8')
   const within = (source: string, selector: string): string => {

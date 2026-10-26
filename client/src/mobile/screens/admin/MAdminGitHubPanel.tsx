@@ -1,5 +1,5 @@
 import { useState, useEffect, type ReactNode } from 'react'
-import { Tag, Calendar, ExternalLink, ChevronDown, ChevronUp, Loader2, Heart, Coffee, Bug, Lightbulb, BookOpen } from 'lucide-react'
+import { Tag, Calendar, ExternalLink, ChevronDown, ChevronUp, Loader2, Bug, Lightbulb, BookOpen } from 'lucide-react'
 import { getLocaleForLanguage, useTranslation } from '../../../i18n'
 import apiClient from '../../../api/client'
 import { MAdminButton, MAdminCard } from './MAdminUi'
@@ -20,7 +20,7 @@ interface GithubRelease {
   [key: string]: unknown
 }
 
-// Support / community link cards (design: brand-tinted icon tile + title/sub).
+// Community link cards (design: brand-tinted icon tile + title/sub).
 // Brand hex stays as content identity; every surface/border uses --m-* tokens.
 interface LinkCard {
   href: string
@@ -200,8 +200,6 @@ export default function MAdminGitHubPanel({ isPrerelease = false }: { isPrerelea
   )
 
   const cards: LinkCard[] = [
-    { href: 'https://ko-fi.com/mauriceboe', color: '#ff5e5b', icon: <Coffee size={18} className="text-[#ff5e5b]" />, title: 'Ko-fi', sub: t('admin.github.support') },
-    { href: 'https://buymeacoffee.com/mauriceboe', color: '#ffdd00', icon: <Heart size={18} className="text-[#ffdd00]" />, title: 'Buy Me a Coffee', sub: t('admin.github.support') },
     { href: 'https://discord.gg/NhZBDSd4qW', color: '#5865F2', icon: discordIcon, title: 'Discord', sub: 'Join the community' },
     { href: 'https://github.com/mauriceboe/TREK/issues/new?template=bug_report.yml', color: '#ef4444', icon: <Bug size={18} className="text-[#ef4444]" />, title: t('settings.about.reportBug'), sub: t('settings.about.reportBugHint') },
     { href: 'https://github.com/mauriceboe/TREK/discussions/new?category=feature-requests', color: '#f59e0b', icon: <Lightbulb size={18} className="text-[#f59e0b]" />, title: t('settings.about.featureRequest'), sub: t('settings.about.featureRequestHint') },
@@ -212,7 +210,7 @@ export default function MAdminGitHubPanel({ isPrerelease = false }: { isPrerelea
 
   return (
     <div className="space-y-3">
-      {/* Support / community cards */}
+      {/* Community cards */}
       <div className="grid grid-cols-1 gap-[10px]">
         {cards.map((card) => (
           <a

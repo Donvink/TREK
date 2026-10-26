@@ -690,7 +690,6 @@ const admin: TranslationStrings = {
   'admin.github.hideDetails': 'Details verbergen',
   'admin.github.loadMore': 'Meer laden',
   'admin.github.loading': 'Laden...',
-  'admin.github.support': 'Helpt mij TREK verder te ontwikkelen',
   'admin.github.error': 'Releases laden mislukt',
   'admin.github.by': 'door',
   'admin.update.available': 'Update beschikbaar',

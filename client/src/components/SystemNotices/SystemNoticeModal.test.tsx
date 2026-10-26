@@ -729,13 +729,11 @@ describe('ModalRenderer', () => {
     useSystemNoticeStore.setState({ notices: [notice], loaded: true });
     const dismissSpy = vi.spyOn(useSystemNoticeStore.getState(), 'dismiss');
 
-    const { container } = render(<ModalRenderer notices={[notice]} />);
+    render(<ModalRenderer notices={[notice]} />);
     await flushGraceDelay();
 
     const primary = screen.getByRole('button', { name: 'Support us' });
-    expect(primary.className).toContain('bg-[#FFDD00]');
-    // unbranded links get the generic coffee glyph, not a brand mark
-    expect(container.querySelector('.lucide-coffee')).not.toBeNull();
+    expect(primary.className).toContain('bg-blue-600');
 
     await act(async () => {
       fireEvent.click(primary);
@@ -747,37 +745,6 @@ describe('ModalRenderer', () => {
     expect(open).toHaveBeenNthCalledWith(1, 'https://example.com/support', '_blank', 'noopener,noreferrer');
     expect(open).toHaveBeenNthCalledWith(2, 'https://example.org/tip', '_blank', 'noopener,noreferrer');
     expect(dismissSpy).not.toHaveBeenCalled();
-  });
-
-  it('FE-SN-MODAL-028: Buy Me a Coffee and Ko-fi links carry their own brand mark', async () => {
-    vi.spyOn(window, 'open').mockImplementation(() => null);
-    const notice = makeNotice({
-      id: 'brands',
-      cta: { kind: 'link', href: 'https://buymeacoffee.com/trek', labelKey: 'Buy me a coffee' },
-      secondaryCta: { kind: 'link', href: 'https://ko-fi.com/trek', labelKey: 'Ko-fi' },
-    });
-    render(<ModalRenderer notices={[notice]} />);
-    await flushGraceDelay();
-
-    const primary = document.getElementById('notice-cta-brands') as HTMLElement;
-    const secondary = document.getElementById('notice-cta2-brands') as HTMLElement;
-
-    expect((primary.querySelector('path') as SVGPathElement).getAttribute('d')).toContain('M20.216');
-    expect(secondary.className).toContain('bg-[#FF5E5B]');
-    expect((secondary.querySelector('path') as SVGPathElement).getAttribute('d')).toContain('M11.351');
-  });
-
-  it('FE-SN-MODAL-029: a "kofi" link without the ko-fi.com host still resolves to the Ko-fi mark', async () => {
-    vi.spyOn(window, 'open').mockImplementation(() => null);
-    const notice = makeNotice({
-      id: 'kofi-alt',
-      cta: { kind: 'link', href: 'https://kofi.example/trek', labelKey: 'Ko-fi' },
-    });
-    render(<ModalRenderer notices={[notice]} />);
-    await flushGraceDelay();
-
-    const primary = document.getElementById('notice-cta-kofi-alt') as HTMLElement;
-    expect((primary.querySelector('path') as SVGPathElement).getAttribute('d')).toContain('M11.351');
   });
 
   it('FE-SN-MODAL-030: a nav CTA on a non-dismissible notice navigates without dismissing', async () => {

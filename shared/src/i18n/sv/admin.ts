@@ -754,7 +754,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Laddar...',
   'admin.github.error': 'Det gick inte att ladda utgåvorna',
   'admin.github.by': 'av',
-  'admin.github.support': 'Hjälper mig att fortsätta bygga TREK',
   'admin.update.available': 'Uppdatering tillgänglig',
   'admin.update.text': 'TREK {version} finns tillgängligt. Du kör {current}.',
   'admin.update.button': 'Visa på GitHub',

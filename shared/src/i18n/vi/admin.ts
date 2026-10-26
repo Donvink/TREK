@@ -694,7 +694,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Đang tải...',
   'admin.github.error': 'Không tải được bản phát hành',
   'admin.github.by': 'qua',
-  'admin.github.support': 'Giúp tôi tiếp tục xây dựng TREK',
   'admin.update.available': 'Đã có bản cập nhật',
   'admin.update.text': 'TREK {version} có sẵn. Bạn đang chạy {current}.',
   'admin.update.button': 'Xem trên GitHub',

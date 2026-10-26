@@ -692,7 +692,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'جارٍ التحميل...',
   'admin.github.error': 'فشل تحميل الإصدارات',
   'admin.github.by': 'بواسطة',
-  'admin.github.support': 'يساعدني في تطوير TREK',
   'admin.update.available': 'يتوفر تحديث',
   'admin.update.text': 'TREK {version} متوفر. أنت تستخدم {current}.',
   'admin.update.button': 'عرض على GitHub',

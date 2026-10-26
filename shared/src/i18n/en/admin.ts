@@ -729,7 +729,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Loading...',
   'admin.github.error': 'Failed to load releases',
   'admin.github.by': 'by',
-  'admin.github.support': 'Helps me keep building TREK',
   'admin.update.available': 'Update available',
   'admin.update.text': 'TREK {version} is available. You are running {current}.',
   'admin.update.button': 'View on GitHub',

@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import semver from 'semver';
 import { RETIRED_NOTICE_IDS, SYSTEM_NOTICES } from '../../../src/systemNotices/registry.js';
-import { isNoticeVersionActive } from '../../../src/systemNotices/service.js';
 
 /** Collect all actionIds registered via registerNoticeAction() in client source files. */
 function collectRegisteredActionIds(): Set<string> {
@@ -65,42 +64,14 @@ describe('registry integrity', () => {
     }
   });
 
-  it('the release notes come back on every upgrade, with no upper bound', () => {
-    const release = SYSTEM_NOTICES.find(n => n.id === 'release-notes');
-    expect(release).toBeDefined();
-    // Nothing on 3.x ships this copy, and the thank-you notice still covers it there.
-    expect(isNoticeVersionActive(release!, '3.4.1')).toBe(false);
-    // From there on every version carries it, a patch release included, so no
-    // install is left with nothing to show because nobody wrote a new window.
-    for (const version of ['4.0.0', '4.2.1', '4.3.0', '4.3.1', '4.9.9', '5.0.0', '12.4.0']) {
-      expect(isNoticeVersionActive(release!, version), version).toBe(true);
+  it('retired notices stay out of the registry and their ids stay reserved', () => {
+    for (const id of ['release-4-0-0', 'release-notes', 'thank-you-support']) {
+      expect(SYSTEM_NOTICES.some(n => n.id === id), id).toBe(false);
+      expect(RETIRED_NOTICE_IDS).toContain(id);
     }
-    expect(release!.maxVersion).toBeUndefined();
-    // The window alone is not enough: a one-time dismissal would retire it for good
-    // the first time somebody closed it.
-    expect(release!.recurring).toBe('per-version');
-  });
-
-  it('the 4.0.0 release notice is retired and its id stays reserved', () => {
-    expect(SYSTEM_NOTICES.some(n => n.id === 'release-4-0-0')).toBe(false);
-    expect(RETIRED_NOTICE_IDS).toContain('release-4-0-0');
     for (const id of RETIRED_NOTICE_IDS) {
       expect(SYSTEM_NOTICES.some(n => n.id === id), id).toBe(false);
     }
   });
 
-  it('the thank-you notice hands over to the release modal at 4.0.0', () => {
-    const thankYou = SYSTEM_NOTICES.find(n => n.id === 'thank-you-support');
-    expect(thankYou).toBeDefined();
-    // Both carry the same thank-you and the same two support links, so exactly
-    // one of them may be active at any version.
-    expect(isNoticeVersionActive(thankYou!, '3.4.1')).toBe(true);
-    expect(isNoticeVersionActive(thankYou!, '4.0.0')).toBe(false);
-
-    const release = SYSTEM_NOTICES.find(n => n.id === 'release-notes')!;
-    for (const version of ['3.4.1', '4.0.0', '4.0.7', '4.1.0', '4.3.0', '5.0.0']) {
-      const active = [thankYou!, release].filter(n => isNoticeVersionActive(n, version));
-      expect(active.length, `thank-you and release notes at ${version}`).toBe(1);
-    }
-  });
 });

@@ -1,4 +1,4 @@
-import { BookOpen, Bug, Coffee, ExternalLink, Heart, Info, Lightbulb } from 'lucide-react';
+import { BookOpen, Bug, ExternalLink, Heart, Info, Lightbulb } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from '../../i18n';
 import Section from './Section';
@@ -58,83 +58,14 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
         </span>
       </p>
 
-      {/* Ko-fi, Buy Me a Coffee, Discord, and the issue/discussion links assume
-          the reader runs this install and can act on it. On a centrally
-          administered one they support somebody they are not the customer of,
-          and file bugs against an instance they do not operate. The version and
+      {/* Discord and the issue/discussion links assume the reader runs this
+          install and can act on it. On a centrally administered one they would
+          file bugs against an instance they do not operate. The version and
           the source link below stay in both modes: AGPL §13 wants the source
           offered prominently to the people using it over a network, and that is
           not the part being trimmed here. */}
       {!managed && (<>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <a
-          href="https://ko-fi.com/mauriceboe"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#ff5e5b';
-            e.currentTarget.style.boxShadow = '0 0 0 1px #ff5e5b22';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-primary)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <div
-            className="bg-[#ff5e5b15]"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Coffee size={20} className="text-[#ff5e5b]" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-content">Ko-fi</div>
-            <div className="text-xs text-content-faint">{t('admin.github.support')}</div>
-          </div>
-          <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
-        </a>
-        <a
-          href="https://buymeacoffee.com/mauriceboe"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#ffdd00';
-            e.currentTarget.style.boxShadow = '0 0 0 1px #ffdd0022';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-primary)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <div
-            className="bg-[#ffdd0015]"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Heart size={20} className="text-[#ffdd00]" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-content">Buy Me a Coffee</div>
-            <div className="text-xs text-content-faint">{t('admin.github.support')}</div>
-          </div>
-          <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
-        </a>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <a
           href="https://discord.gg/NhZBDSd4qW"
           target="_blank"
@@ -171,9 +102,6 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
           </div>
           <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
         </a>
-      </div>
-
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <a
           href="https://github.com/liketrek/TREK/issues/new?template=bug_report.yml"
           target="_blank"
@@ -279,9 +207,9 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
       </div>
       </>)}
 
-      {/* What replaces the grids above. AGPL §13 asks for the source to be
+      {/* What replaces the grid above. AGPL §13 asks for the source to be
           offered prominently to whoever uses the software over a network, and a
-          customer of a hosted instance is exactly that reader. The support and
+          customer of a hosted instance is exactly that reader. The community and
           bug-report links go; this does not. */}
       {managed && (
         <a

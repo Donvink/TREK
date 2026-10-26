@@ -20,7 +20,7 @@ If your account requires MFA setup, TREK redirects you directly to the **Account
 | Plugins | Per-user settings for installed plugins | Only when at least one plugin is installed |
 | Offline | Cached trips, pending changes, re-sync and clear cache | Always |
 | Account | Username, email, password, MFA (TOTP + backup codes), passkeys, avatar, delete account | Always |
-| About | App version, links to Ko-fi / Buy Me a Coffee / Discord / GitHub (bug reports, feature requests) / Wiki | Only when version metadata is available |
+| About | App version, links to Discord / GitHub (bug reports, feature requests) / Wiki | Only when version metadata is available |
 
 ## General tab
 

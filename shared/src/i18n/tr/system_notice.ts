@@ -25,9 +25,6 @@ const system_notice: TranslationStrings = {
   'system_notice.v3_mcp.highlight_scopes': '24 ayrıntılı izin kapsamı',
   'system_notice.v3_mcp.highlight_deprecated': 'Statik trek_ jetonları kullanımdan kaldırıldı',
   'system_notice.v3_mcp.highlight_tools': 'Genişletilmiş araç seti ve istemler',
-  'system_notice.v3_thankyou.title': 'Benden kişisel bir not',
-  'system_notice.v3_thankyou.body':
-    "Before you go — I want to take a moment.\n\nTREK started as a side project I built for my own trips. I never imagined it would grow into something that 4,000 of you now trust to plan your adventures. Every star, every issue, every feature request — I read them all, and they keep me going through late nights between a full-time job and university.\n\nI want you to know: TREK will always be open source, always self-hosted, always yours. No tracking, no subscriptions, no strings attached. Just a tool built by someone who loves traveling as much as you do.\n\nSpecial thanks to [jubnl](https://github.com/jubnl) — you have become an incredible collaborator. So much of what makes 3.0 great carries your fingerprints. Thank you for believing in this project when it was still rough around the edges.\n\nAnd to every single one of you who filed a bug, translated a string, shared TREK with a friend, or simply used it to plan a trip — **thank you**. You are the reason this exists.\n\nHere's to many more adventures together.\n\n— Maurice\n\n---\n\n[Join the community on Discord](https://discord.gg/7Q6M6jDwzf)\n\nIf TREK makes your travels better, a [small coffee](https://ko-fi.com/mauriceboe) always keeps the lights on.",
   'system_notice.v3014_whitespace_collision.title': 'İşlem gerekli: kullanıcı hesabı çakışması',
   'system_notice.v3014_whitespace_collision.body':
     '3.0.14 yükseltmesi, kayıtlı hesaplardaki baştaki/sondaki boşluklardan kaynaklanan bir veya daha fazla kullanıcı adı veya e-posta çakışması tespit etti. Etkilenen hesaplar otomatik olarak yeniden adlandırıldı. Hangi hesapların incelenmesi gerektiğini belirlemek için sunucu günlüklerinde **[migration] WHITESPACE COLLISION** ile başlayan satırlara bakın.',
@@ -41,51 +38,10 @@ const system_notice: TranslationStrings = {
   'system_notice.welcome_v1.highlight_offline': 'Mobilde çevrimdışı çalışır',
   'system_notice.dev_test_modal.title': '[Dev] Test bildirimi',
   'system_notice.dev_test_modal.body': 'Bu yalnızca geliştirme ortamına özel bir test bildirimidir.',
-  'system_notice.thank_you_support.title': "TREK'i kullandığınız için teşekkürler",
-  'system_notice.thank_you_support.body':
-    "TREK'i yüklediğin için kısaca teşekkür etmek istiyorum — bu benim için gerçekten çok değerli.\n\nTek başına çalışan bir geliştiriciyim ve TREK'i boş zamanlarımda geliştiriyorum. Başlangıçta yalnızca kendi seyahatlerim için yaptığım küçük bir araçtı; o günden beri topluluktan gelen destek ve ilgi beni gerçekten hayrete düşürdü. TREK'i kendi adıma büyük bir sevgiyle hazırlıyorum — ama ona şekil vermeye yardım eden onca harika dış katkıcının da büyük payı var.\n\n**TREK açık kaynaklı ve tamamen ücretsiz — ve sonsuza dek böyle kalacak. Ücretli paketler yok, abonelikler yok, gizli bir şart yok. Söz veriyorum.**\n\nTREK işine yarıyorsa ve gelişimine destek olmak istersen, küçük bir kahve geliştirmeye devam etmeme cidden yardımcı oluyor — hiçbir baskı yok ama her fincan, o geç saatlere kadar süren çalışmaları ayakta tutuyor.\n\nBurada olduğun için teşekkür ederim.\n\n— Maurice",
-  'system_notice.thank_you_support.highlight_opensource': "GitHub'da %100 açık kaynak",
-  'system_notice.thank_you_support.highlight_free': 'Sonsuza dek ücretsiz — hiçbir ücretli plan yok',
-  'system_notice.thank_you_support.highlight_community': 'Toplulukla birlikte geliştirildi',
-  'system_notice.thank_you_support.cta_bmc': 'Buy Me a Coffee',
-  'system_notice.thank_you_support.cta_kofi': "Ko-fi'de Destek Ol",
   'system_notice.pager.prev': 'Önceki bildirim',
   'system_notice.pager.next': 'Sonraki bildirim',
   'system_notice.pager.counter': '{current} / {total}',
   'system_notice.pager.goto': '{n}. bildirime git',
   'system_notice.pager.position': '{total} Bildirimden {current}.',
-  'system_notice.release_notes.eyebrow': 'Güncelleme yüklendi',
-  'system_notice.release_notes.features_label': 'Öne çıkanlar',
-  'system_notice.release_notes.features_aside': 'Hepsi bu kadar değil',
-  'system_notice.release_notes.feature_places_title': 'TREK Places API',
-  'system_notice.release_notes.feature_places_body': 'Kendi yer API’sine sahip ilk açık kaynak seyahat planlayıcısı. 73,6 milyon yer, anahtar yok, kota yok.',
-  'system_notice.release_notes.feature_roadtrip_title': 'Yol gezisi eklentisi',
-  'system_notice.release_notes.feature_roadtrip_body': 'Sürüşü kendi planlar: rota, mesafe, saatler ve duraklar. Bir yönetici açana kadar kapalı.',
-  'system_notice.release_notes.feature_dawarich_title': 'Dawarich entegrasyonu',
-  'system_notice.release_notes.feature_dawarich_body': 'Google Timeline’ın kendi sunucunda çalışan alternatifi, artık TREK içinden okunabiliyor. TREK okur, yalnızca okur.',
-  'system_notice.release_notes.footnote':
-    "Ayrıca TREK'in geri kalanına yayılmış, daha küçük değişikliklerden oluşan uzun bir liste var.",
-  'system_notice.release_notes.notes_label': 'Sürüm notları',
-  'system_notice.release_notes.note_eyebrow': 'Geliştiriciden bir not',
-  'system_notice.release_notes.note_title': "TREK'i geliştirmeye devam etmemin sebebi sensin.",
-  'system_notice.release_notes.note_body':
-    'TREK, kendi seyahatlerim için küçük bir araç olarak başladı. Onları daha iyi planlamak istediğim için iş çıkışlarında yazıyordum. O günden beri de büyümeyi hiç tam olarak bırakmadı. Kullandığın neredeyse her şey gece geç saatlerde, hafta sonlarında, trenlerde, tam zamanlı bir işin yanında yapıldı ve birinin onu bir gün gerçekten açıp açmayacağını içten içe merak ettiğim çok akşam oldu.',
-  'system_notice.release_notes.promise_label': 'Söz',
-  'system_notice.release_notes.promise_lead': 'TREK sonsuza dek ücretsiz kalacak.',
-  'system_notice.release_notes.promise_text':
-    'Her özellik, her güncelleme, herkes için. Ücretli paket yok, abonelik yok, gizli şart yok.',
-  'system_notice.release_notes.note_body_after':
-    "Sonra sizler açtınız. Birkaç ay içinde sayınız binleri buldu: yıldızlar, hata bildirimleri, konuşmadığım dillere çeviriler, hiç tanışmadığım insanlardan pull request'ler. Hâlâ her sabah ilk iş repoya bakıyorum ve bu hâlâ tam olarak gerçekmiş gibi gelmiyor.",
-  'system_notice.release_notes.note_closing': 'Burada olduğun için teşekkür ederim. Sevgiler, Maurice.',
-  'system_notice.release_notes.support_lead':
-    'TREK ücretsiz ve hep öyle kalacak, ama sunucular, alan adları ve bir sürü geç gece ücretsiz değil.',
-  'system_notice.release_notes.support_text':
-    'TREK seyahatlerinde kendine bir yer edindiyse, bana bir kahve ısmarla ve bir sonraki sürümün gelmesine yardım et.',
-  'system_notice.release_notes.cta_bmc': 'Buy me a coffee',
-  'system_notice.release_notes.cta_kofi': "Ko-fi'de Destek Ol",
-  'system_notice.release_notes.headline': 'TREK’in artık kendi başına yaptığı dört şey.',
-  'system_notice.release_notes.intro': 'Kendi yer API’si, baştan sona planlanan yol gezileri, konum geçmişiniz sizin elinizde, ve belgeleriniz eşitlenmiş.',
-  'system_notice.release_notes.feature_docsync_title': 'Belge Eşitleme',
-  'system_notice.release_notes.feature_docsync_body': 'Paperless-ngx, Papra, Nextcloud, OpenCloud ve Synology Drive. Bir seyahatin belgeleri, zaten kullandığınız depoyla iki yönlü akar.',
 };
 export default system_notice;

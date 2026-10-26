@@ -739,7 +739,6 @@ const admin: TranslationStrings = {
   'admin.github.loading': 'Memuat...',
   'admin.github.error': 'Gagal memuat rilis',
   'admin.github.by': 'oleh',
-  'admin.github.support': 'Bantu saya terus mengembangkan TREK',
   'admin.update.available': 'Pembaruan tersedia',
   'admin.update.text': 'TREK {version} tersedia. Kamu menggunakan {current}.',
   'admin.update.button': 'Lihat di GitHub',

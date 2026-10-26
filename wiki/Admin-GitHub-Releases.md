@@ -6,12 +6,10 @@ The **GitHub** tab shows the TREK release history fetched from GitHub and provid
 
 ## Support and resources
 
-Six cards at the top of the tab link to external resources:
+Four cards at the top of the tab link to external resources:
 
 | Card | Link |
 |------|------|
-| **Ko-fi** | Support the project financially |
-| **Buy Me a Coffee** | Alternative support link |
 | **Discord** | Join the TREK community |
 | **Report a Bug** | Open a GitHub issue with the bug report template |
 | **Feature Request** | Open a GitHub Discussion in the feature requests category |
