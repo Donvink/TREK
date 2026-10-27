@@ -2,11 +2,19 @@ import type { TravelPlaceExtraction } from './travel-places.schema';
 
 import { z } from 'zod';
 
-export const travelSourceImageBytesSchema = z
-  .instanceof(Uint8Array)
-  .refine((data) => data.byteLength > 0 && data.byteLength <= 8 * 1024 * 1024, {
-    message: 'Expected image bytes, at most 8 MB',
-  });
+/** Raw image bytes, 1 B to 8 MB. */
+export function isImageBytes(data: unknown): data is Uint8Array {
+  return data instanceof Uint8Array && data.byteLength > 0 && data.byteLength <= 8 * 1024 * 1024;
+}
+
+/**
+ * The binary upload body. Declared over `unknown` with a refinement rather than
+ * `z.instanceof`, because the API docs build a JSON Schema from every request
+ * body and a class check has no JSON Schema form; the check itself is the same.
+ */
+export const travelSourceImageBytesSchema = z.unknown().refine(isImageBytes, {
+  message: 'Expected image bytes, at most 8 MB',
+});
 
 export const travelSourceUrlSchema = z
   .string()
@@ -71,6 +79,14 @@ export const travelSourceBatchSchema = z
   })
   .strict();
 
+/** Text read from one note image by OCR on the collector's machine. */
+export const travelSourceImageTextSchema = z
+  .object({
+    engine: z.enum(['rapidocr']),
+    text: z.string().max(4000),
+  })
+  .strict();
+
 export type TravelSourceNote = z.infer<typeof travelSourceNoteSchema>;
 export type TravelSourceBatch = z.infer<typeof travelSourceBatchSchema>;
 export type StoredTravelSource = TravelSourceNote & {
@@ -78,6 +94,8 @@ export type StoredTravelSource = TravelSourceNote & {
   query: string;
   content_hash: string | null;
   saved_image_ids?: string[];
+  /** Image ids that have OCR text stored. */
+  read_image_ids?: string[];
   place_extraction?: TravelPlaceExtraction;
 };
 export interface TravelSourceImportResult {

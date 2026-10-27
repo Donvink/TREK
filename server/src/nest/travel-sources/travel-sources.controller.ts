@@ -1,8 +1,8 @@
 import type { User } from '../../types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { TravelSourcesService } from './travel-sources.service';
-import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
-import { travelSourceBatchSchema, travelSourceImageBytesSchema } from '@trek/shared';
+import { BadRequestException, Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
+import { isImageBytes, travelSourceBatchSchema, travelSourceImageBytesSchema, travelSourceImageTextSchema } from '@trek/shared';
 import { travelPlaceExtractionRequestSchema, travelPlaceConfirmRequestSchema, travelPlaceImageIdentitySchema } from '@trek/shared';
 import { TravelPlacesService } from './travel-places.service';
 
@@ -10,10 +10,11 @@ import { createZodDto } from 'nestjs-zod';
 import type { Response } from 'express';
 
 export class TravelSourceImportDto extends createZodDto(travelSourceBatchSchema) {}
-export class TravelSourceImageUploadDto extends createZodDto(travelSourceImageBytesSchema) {}
 export class TravelPlaceExtractionDto extends createZodDto(travelPlaceExtractionRequestSchema) {}
 export class TravelPlaceConfirmDto extends createZodDto(travelPlaceConfirmRequestSchema) {}
 export class TravelPlaceImageIdentityDto extends createZodDto(travelPlaceImageIdentitySchema) {}
+export class TravelSourceImageTextDto extends createZodDto(travelSourceImageTextSchema) {}
+export class TravelSourceImageUploadDto extends createZodDto(travelSourceImageBytesSchema) {}
 
 @Controller('api/travel-sources')
 export class TravelSourcesController {
@@ -51,7 +52,15 @@ export class TravelSourcesController {
   @Post(':sourceId/images/:imageId')
   @HttpCode(200)
   saveImage(@CurrentUser() user: User, @Param('sourceId') sourceId: string, @Param('imageId') imageId: string, @Body() body: TravelSourceImageUploadDto) {
+    // The pipe has already run the refinement; this narrows the type for the service.
+    if (!isImageBytes(body)) throw new BadRequestException('Expected image bytes, at most 8 MB');
     return this.sources.saveImage(user.id, sourceId, imageId, Buffer.from(body));
+  }
+
+  @Post(':sourceId/images/:imageId/text')
+  @HttpCode(200)
+  saveImageText(@CurrentUser() user: User, @Param('sourceId') sourceId: string, @Param('imageId') imageId: string, @Body() body: TravelSourceImageTextDto) {
+    return this.places.saveImageText(user.id, sourceId, imageId, body.engine, body.text);
   }
 
   @Get(':sourceId/images/:imageId')
