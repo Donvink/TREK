@@ -176,6 +176,7 @@ describe('day plan', () => {
     expect(legs.map((l) => `${l.from_name}>${l.to_name}@${l.time}`)).toEqual([
       'Bellinzona>Torino@08:00', 'A>B@10:00', 'Torino>Venezia@09:00', 'Venezia>Bellinzona@16:00',
     ]);
+    expect(legs.map((l) => !!l.intercity)).toEqual([true, false, true, true]);
   });
 
   it('marks walks as reference and turns timetables into verified or unverified checks', () => {
@@ -204,6 +205,22 @@ describe('day plan', () => {
     expect(transitCheck(far, [], 'Europe/Zurich', 'now')).toMatchObject({ status: 'unverified', summary: '这一天查不到公共交通班次，请到官方网站确认' });
     expect(transitCheck(far, null, 'Europe/Zurich', 'now').summary).toContain('查询失败');
     expect(verified.check_url).toContain('travelmode=transit');
+  });
+
+  it('between cities prefers the direct train to a coach or a string of changes; within a city takes the first', () => {
+    const it = (start: string, minutes: number, transfers: number, modes: string[]): TransitItinerary => ({
+      startTime: `2026-11-05T${start}:00Z`, endTime: new Date(Date.parse(`2026-11-05T${start}:00Z`) + minutes * 60_000).toISOString(),
+      duration: minutes * 60, transfers, walkSeconds: 0, legs: modes.map((mode, i) => ({ mode, line: `${mode}${i}` }) as TransitItinerary['legs'][number]),
+    });
+    const options = [
+      it('07:03', 292, 2, ['REGIONAL_RAIL', 'REGIONAL_RAIL', 'COACH']),
+      it('07:04', 343, 3, ['REGIONAL_RAIL', 'SUBURBAN', 'REGIONAL_RAIL', 'REGIONAL_RAIL']),
+      it('08:27', 268, 1, ['LONG_DISTANCE', 'BUS']),
+      it('08:38', 307, 0, ['COACH']),
+    ];
+    const leg = { day_index: 0, date: '2026-11-05', from_name: 'Zürich', to_name: 'München', from: { lat: 47.38, lng: 8.54 }, to: { lat: 48.14, lng: 11.56 }, time: '08:00' };
+    expect(transitCheck({ ...leg, intercity: true }, options, 'Europe/Zurich', 'now').summary).toBe('LONG_DISTANCE0 → BUS1，换乘 1 次');
+    expect(transitCheck(leg, options, 'Europe/Zurich', 'now').departure).toBe('08:03');
   });
 
   it('knows the Central European offset in summer and winter', () => {

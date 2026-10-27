@@ -10,6 +10,9 @@ export interface Point {
 /** Below this a leg is walked, and the estimate is only a reference. Set by how much the traveller likes to walk. */
 export const WALK_LIMIT_KM: Record<TravelWalking, number> = { low: 0.8, medium: 1.2, high: 2 };
 const WALK_KMH = 4.5;
+/** What a change of train, and a long-distance coach instead of rail, cost in minutes when ranking. */
+const TRANSFER_MINUTES = 30;
+const COACH_MINUTES = 120;
 const ROUTE_FACTOR = 1.3;
 
 export function distanceKm(a: Point, b: Point): number {
@@ -101,6 +104,8 @@ export interface LegRequest {
   to: Point;
   /** Local wall-clock time to search from, HH:MM. */
   time: string;
+  /** A journey between cities: rank by overall effort, not by the first train out. */
+  intercity?: boolean;
 }
 
 /** The journeys a plan needs: out from the origin, between cities, back home, and between neighbouring stops. */
@@ -115,9 +120,9 @@ export function legRequests(
     const cityPoint = cities.get(day.city);
     const previousCity = i === 0 ? null : days[i - 1].city;
     if (cityPoint && i === 0) {
-      legs.push({ day_index: day.day_index, date: day.date, from_name: origin.name, to_name: day.city, from: origin.point, to: cityPoint, time: '08:00' });
+      legs.push({ day_index: day.day_index, date: day.date, from_name: origin.name, to_name: day.city, from: origin.point, to: cityPoint, time: '08:00', intercity: true });
     } else if (cityPoint && previousCity && previousCity !== day.city && cities.get(previousCity)) {
-      legs.push({ day_index: day.day_index, date: day.date, from_name: previousCity, to_name: day.city, from: cities.get(previousCity)!, to: cityPoint, time: '09:00' });
+      legs.push({ day_index: day.day_index, date: day.date, from_name: previousCity, to_name: day.city, from: cities.get(previousCity)!, to: cityPoint, time: '09:00', intercity: true });
     }
     const stops = day.pool_keys.map((key) => places.get(key)).filter((p): p is TravelPoolPlace => !!p && p.lat !== null && p.lng !== null);
     stops.slice(1).forEach((stop, n) => {
@@ -129,7 +134,7 @@ export function legRequests(
       });
     });
     if (cityPoint && i === days.length - 1) {
-      legs.push({ day_index: day.day_index, date: day.date, from_name: day.city, to_name: origin.name, from: cityPoint, to: origin.point, time: '16:00' });
+      legs.push({ day_index: day.day_index, date: day.date, from_name: day.city, to_name: origin.name, from: cityPoint, to: origin.point, time: '16:00', intercity: true });
     }
   });
   return legs;
@@ -169,7 +174,12 @@ export function transitCheck(leg: LegRequest, itineraries: TransitItinerary[] | 
     day_index: leg.day_index, date: leg.date, from_name: leg.from_name, to_name: leg.to_name,
     check_url: checkUrl(leg.from, leg.to), checked_at: checkedAt,
   };
-  const found = itineraries?.find((it) => it.legs.some((l) => l.mode !== 'WALK'));
+  const rideable = (itineraries ?? []).filter((it) => it.legs.some((l) => l.mode !== 'WALK'));
+  // Between cities a long-distance coach or a string of changes is a worse trip than a
+  // slightly later direct train; within a city the first connection is the answer.
+  const effort = (it: TransitItinerary) => it.duration / 60 + TRANSFER_MINUTES * it.transfers
+    + (it.legs.some((l) => l.mode === 'COACH') ? COACH_MINUTES : 0);
+  const found = leg.intercity ? [...rideable].sort((a, b) => effort(a) - effort(b))[0] : rideable[0];
   if (!found) {
     return {
       ...base, status: 'unverified', departure: null, arrival: null, duration_minutes: null, transfers: null,
