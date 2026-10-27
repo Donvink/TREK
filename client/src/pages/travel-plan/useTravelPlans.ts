@@ -1,7 +1,7 @@
 import { travelPlanCreateSchema, type TravelPlan } from '@trek/shared'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { travelPlansApi } from '../../api/travelPlans'
+import { travelPlansApi, travelProfileApi } from '../../api/travelPlans'
 import { apiMessage, EMPTY_FORM, formToInput, type PlanForm } from './travelPlanModel'
 
 export function useTravelPlans() {
@@ -19,6 +19,11 @@ export function useTravelPlans() {
       .then((list) => { if (active) setPlans(list) })
       .catch(() => { if (active) setError('计划加载失败，请刷新重试。') })
       .finally(() => { if (active) setLoading(false) })
+    // Start from the traveller's usual pace; anything they have already chosen wins.
+    travelProfileApi
+      .get()
+      .then((view) => { if (active && view.profile) setForm((current) => (current === EMPTY_FORM ? { ...current, pace: view.profile!.pace } : current)) })
+      .catch(() => { /* the form keeps its defaults without a profile */ })
     return () => { active = false }
   }, [])
 

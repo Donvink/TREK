@@ -6,6 +6,8 @@ import type {
   TravelPlanDetail,
   TravelPlanFocus,
   TravelPlanInput,
+  TravelProfile,
+  TravelProfileView,
 } from '@trek/shared'
 
 /**
@@ -39,4 +41,13 @@ export const travelPlansApi = {
         if (err.response?.status === 404) return null
         throw err
       }),
+}
+
+export const travelProfileApi = {
+  get: () => apiClient.get<TravelProfileView>('/travel-profile').then((r) => r.data),
+  save: (profile: TravelProfile) => apiClient.put<TravelProfileView>('/travel-profile', profile).then((r) => r.data),
+  forget: () => apiClient.delete<TravelProfileView>('/travel-profile').then((r) => r.data),
+  accept: (key: string) => apiClient.post<TravelProfileView>(`/travel-profile/suggestions/${encodeURIComponent(key)}/accept`).then((r) => r.data),
+  dismiss: (key: string) => apiClient.post<TravelProfileView>(`/travel-profile/suggestions/${encodeURIComponent(key)}/dismiss`).then((r) => r.data),
+  deleteSignal: (id: number) => apiClient.delete<TravelProfileView>(`/travel-profile/signals/${id}`).then((r) => r.data),
 }

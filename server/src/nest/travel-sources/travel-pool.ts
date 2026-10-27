@@ -17,6 +17,9 @@ const FOCUS_KINDS: Record<TravelPlanFocus, TravelPlaceKind[]> = {
   culture: ['museum', 'attraction'],
 };
 const FOCUS_LABELS: Record<TravelPlanFocus, string> = { mixed: '综合', food: '美食', nature: '自然风光', culture: '人文艺术' };
+export const KIND_LABELS: Record<TravelPlaceKind, string> = {
+  restaurant: '餐厅', cafe: '咖啡馆', bar: '酒吧', attraction: '景点', museum: '博物馆', nature: '自然风光', shop: '购物', place: '其他地点',
+};
 export const PACE_PER_DAY: Record<TravelPlanPace, number> = { relaxed: 3, normal: 4, packed: 6 };
 
 /**
@@ -37,6 +40,17 @@ export function planCapacity(dayCount: number, pace: TravelPlanPace): number {
   return (dayCount - 2) * perDay + 2 * Math.max(1, Math.floor(perDay / 2));
 }
 
+/** What the traveller told us, and where they have already been. */
+export interface PoolPreferences {
+  likes: TravelPlaceKind[];
+  dislikes: TravelPlaceKind[];
+  avoid: string[];
+  /** Pool keys of places on trips already taken. */
+  visited: Set<string>;
+}
+
+const NO_PREFERENCES: PoolPreferences = { likes: [], dislikes: [], avoid: [], visited: new Set() };
+
 interface PoolInput {
   sources: StoredTravelSource[];
   extractions: TravelPlaceExtraction[];
@@ -44,13 +58,14 @@ interface PoolInput {
   focus: TravelPlanFocus;
   capacity: number;
   decisions: Map<string, 'include' | 'exclude'>;
+  preferences?: PoolPreferences;
 }
 
 /**
  * Merge the places every matching note mentions, then recommend the best fit for the
  * focus until the plan is full. Every recommendation and every omission says why.
  */
-export function buildPool({ sources, extractions, destinations, focus, capacity, decisions }: PoolInput): TravelPoolPlace[] {
+export function buildPool({ sources, extractions, destinations, focus, capacity, decisions, preferences = NO_PREFERENCES }: PoolInput): TravelPoolPlace[] {
   const wanted = new Set(destinations.map(normalizeForMatch));
   const pool = new Map<string, TravelPoolPlace>();
   const ambiguous = new Set<string>();
@@ -108,7 +123,13 @@ export function buildPool({ sources, extractions, destinations, focus, capacity,
     const positives = place.mentions.filter((m) => m.sentiment === 'positive').length;
     const negatives = place.mentions.filter((m) => m.sentiment === 'negative').length;
     return (focusKinds.includes(place.kind) ? 3 : 0) + place.mentions.length + positives - 2 * negatives
-      + (place.location_status === 'confirmed' ? 1 : 0);
+      + (place.location_status === 'confirmed' ? 1 : 0)
+      + (preferences.likes.includes(place.kind) ? 2 : 0) - (preferences.dislikes.includes(place.kind) ? 3 : 0)
+      - (preferences.visited.has(place.pool_key) ? 2 : 0);
+  };
+  const avoided = (place: TravelPoolPlace) => {
+    const text = place.evidence.map((item) => item.quote).join('\n');
+    return preferences.avoid.filter((term) => text.includes(term));
   };
   const ranked = [...pool.values()].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
   let slots = capacity;
@@ -121,12 +142,19 @@ export function buildPool({ sources, extractions, destinations, focus, capacity,
     if (focusKinds.length) {
       place.reasons.push(focusKinds.includes(place.kind) ? `符合「${FOCUS_LABELS[focus]}」侧重` : `不属于「${FOCUS_LABELS[focus]}」侧重`);
     }
+    const label = KIND_LABELS[place.kind];
+    if (preferences.likes.includes(place.kind)) place.reasons.push(`符合你的画像：喜欢${label}`);
+    if (preferences.dislikes.includes(place.kind)) place.reasons.push(`你的画像：不太喜欢${label}`);
+    if (preferences.visited.has(place.pool_key)) place.reasons.push('你之前的行程去过');
+    const hits = avoided(place);
+    if (hits.length) place.warnings.push(`帖子提到你想避开的：${hits.join('、')}`);
     if (place.location_status === 'unknown') {
       place.reasons.push(ambiguous.has(place.pool_key) && place.location_status === 'unknown' ? '有多个同名地图候选，需确认后才能排进路线' : '地图位置未找到，无法排进路线');
     }
     else if (place.location_status === 'candidate') place.reasons.push('地图位置未经确认');
 
-    const fits = negatives <= positives && (!focusKinds.length || focusKinds.includes(place.kind) || place.mentions.length > 1);
+    const fits = negatives <= positives && (!focusKinds.length || focusKinds.includes(place.kind) || place.mentions.length > 1)
+      && !preferences.dislikes.includes(place.kind) && !preferences.visited.has(place.pool_key) && !hits.length;
     place.recommended = fits && slots > 0;
     if (fits && slots <= 0) place.reasons.push('行程已排满，未优先推荐');
     if (place.recommended) slots--;

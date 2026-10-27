@@ -12,6 +12,7 @@ import type { MapsService } from '../../../src/nest/maps/maps.service';
 import type { PlacesService } from '../../../src/nest/places/places.service';
 import type { TransitService } from '../../../src/nest/transit/transit.service';
 import type { TripsService } from '../../../src/nest/trips/trips.service';
+import type { TravelProfileService } from '../../../src/nest/travel-sources/travel-profile.service';
 
 vi.mock('../../../src/db/database', () => ({}));
 const fetchLlm = vi.hoisted(() => vi.fn());
@@ -88,6 +89,7 @@ describe('travel plans', () => {
     service = new TravelPlansService(
       db, maps as unknown as MapsService, transit as unknown as TransitService, trips as unknown as TripsService,
       places as unknown as PlacesService, assignments as unknown as AssignmentsService, notes as unknown as DayNotesService,
+      { preferences: () => ({ likes: [], dislikes: [], avoid: [], walking: 'medium', visited: new Set() }) } as unknown as TravelProfileService,
     );
   });
   afterEach(() => database.close());

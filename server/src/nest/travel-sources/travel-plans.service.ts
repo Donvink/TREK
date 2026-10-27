@@ -19,6 +19,7 @@ import { PlacesService } from '../places/places.service';
 import { TransitService } from '../transit/transit.service';
 import { TripsService } from '../trips/trips.service';
 import { buildPool, planCapacity } from './travel-pool';
+import { TravelProfileService } from './travel-profile.service';
 import type { TransitItinerary } from '../transit/transit.helpers';
 import { distributeDays, legRequests, transitCheck, tripDates, walkCheck, zoneOffset, type LegRequest, type Point } from './travel-itinerary';
 
@@ -36,6 +37,7 @@ export class TravelPlansService {
     private readonly places: PlacesService,
     private readonly assignments: AssignmentsService,
     private readonly dayNotes: DayNotesService,
+    private readonly profiles: TravelProfileService,
   ) {}
 
   private load(userId: number, planId: string): TravelPlan {
@@ -91,7 +93,8 @@ export class TravelPlansService {
         .map((row) => [row.pool_key, row.decision]),
     );
     const capacity = planCapacity(tripDates(plan.start_date, plan.end_date).length, plan.pace);
-    return { pool: buildPool({ sources, extractions, destinations: plan.destinations, focus: plan.focus, capacity, decisions }), sources, extractions };
+    const preferences = this.profiles.preferences(userId);
+    return { pool: buildPool({ sources, extractions, destinations: plan.destinations, focus: plan.focus, capacity, decisions, preferences }), sources, extractions };
   }
 
   detail(userId: number, planId: string): TravelPlanDetail {
@@ -170,10 +173,11 @@ export class TravelPlansService {
       if (point) cities.set(city, point);
     }
     const checkedAt = new Date().toISOString();
+    const { walking } = this.profiles.preferences(userId);
     const legs: TravelLegCheck[] = [];
     if (originPoint) {
       for (const leg of legRequests(days, byKey, { name: plan.origin, point: originPoint }, cities)) {
-        const walk = walkCheck(leg, checkedAt);
+        const walk = walkCheck(leg, checkedAt, walking);
         if (walk) {
           legs.push(walk);
           continue;

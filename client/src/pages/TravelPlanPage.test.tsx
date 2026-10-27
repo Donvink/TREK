@@ -147,4 +147,13 @@ describe('TravelPlansPage', () => {
     renderList()
     expect(await screen.findByText('还没有计划。填上面的表单创建第一个。')).toBeInTheDocument()
   })
+
+  it('FE-TRAVEL-PLANS-003: starts the form at the pace the traveller usually takes', async () => {
+    server.use(
+      http.get('/api/travel-plans', () => HttpResponse.json({ plans: [] })),
+      http.get('/api/travel-profile', () => HttpResponse.json({ profile: { likes: [], dislikes: [], pace: 'packed', walking: 'high', avoid: [] }, updated_at: null, suggestions: [], signals: [], visited_count: 0 })),
+    )
+    renderList()
+    await waitFor(() => expect(screen.getByRole('button', { name: '紧凑' })).toHaveAttribute('aria-pressed', 'true'))
+  })
 })

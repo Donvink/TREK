@@ -11,7 +11,10 @@ export default function TravelPlansPage() {
   return (
     <PageShell className="bg-surface-secondary">
       <main className="mx-auto max-w-3xl px-4 pb-28 pt-8 text-content md:pb-8">
-        <Link to="/travel-sources" className="text-sm text-accent">管理攻略素材</Link>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <Link to="/travel-sources" className="text-accent">管理攻略素材</Link>
+          <Link to="/travel-profile" className="text-accent">我的旅行画像</Link>
+        </div>
         <h1 className="mt-4 text-2xl font-bold">从攻略生成行程</h1>
         <p className="mt-2 text-content-secondary">
           选目的地和日期，系统从你导入的小红书攻略里整理地点，你取舍后生成一份标准行程，交通按出行日期查询核验。

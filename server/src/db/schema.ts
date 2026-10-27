@@ -154,6 +154,18 @@ function createTables(db: Database.Database): void {
       PRIMARY KEY(trip_id, place_id)
     );
 
+    CREATE TABLE IF NOT EXISTS travel_profiles (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_profile_dismissed (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      suggestion_key TEXT NOT NULL,
+      PRIMARY KEY(user_id, suggestion_key)
+    );
+
     CREATE TABLE IF NOT EXISTS travel_llm_usage (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,

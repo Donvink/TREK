@@ -13,6 +13,7 @@ export * from './common/pagination.schema';
 export * from './travel-sources/travel-sources.schema';
 export * from './travel-sources/travel-places.schema';
 export * from './travel-sources/travel-plans.schema';
+export * from './travel-sources/travel-profile.schema';
 
 // Domain contracts
 export * from './weather/weather.schema';

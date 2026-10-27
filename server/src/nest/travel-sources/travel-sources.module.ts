@@ -11,12 +11,14 @@ import { TravelOcrService } from './travel-ocr.service';
 import { TravelPlacesService } from './travel-places.service';
 import { TravelPlansController } from './travel-plans.controller';
 import { TravelPlansService } from './travel-plans.service';
+import { TravelProfileController } from './travel-profile.controller';
+import { TravelProfileService } from './travel-profile.service';
 import { TravelSourcesController } from './travel-sources.controller';
 import { TravelSourcesService } from './travel-sources.service';
 
 @Module({
   imports: [MapsModule, LlmParseModule, TransitModule, TripsModule, PlacesModule, AssignmentsDomainModule, DayNotesModule],
-  controllers: [TravelPlansController, TravelSourcesController],
-  providers: [TravelSourcesService, TravelPlacesService, TravelLlmService, TravelOcrService, TravelPlansService],
+  controllers: [TravelPlansController, TravelProfileController, TravelSourcesController],
+  providers: [TravelSourcesService, TravelPlacesService, TravelLlmService, TravelOcrService, TravelPlansService, TravelProfileService],
 })
 export class TravelSourcesModule {}

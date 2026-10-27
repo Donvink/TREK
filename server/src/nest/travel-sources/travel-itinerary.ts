@@ -1,4 +1,4 @@
-import type { TravelLegCheck, TravelPlanDay, TravelPlanPace, TravelPoolPlace } from '@trek/shared';
+import type { TravelLegCheck, TravelPlanDay, TravelPlanPace, TravelPoolPlace, TravelWalking } from '@trek/shared';
 import type { TransitItinerary } from '../transit/transit.helpers';
 import { PACE_PER_DAY } from './travel-pool';
 
@@ -7,8 +7,8 @@ export interface Point {
   lng: number;
 }
 
-/** Below this a leg is walked, and the estimate is only a reference. */
-export const WALK_LIMIT_KM = 1.2;
+/** Below this a leg is walked, and the estimate is only a reference. Set by how much the traveller likes to walk. */
+export const WALK_LIMIT_KM: Record<TravelWalking, number> = { low: 0.8, medium: 1.2, high: 2 };
 const WALK_KMH = 4.5;
 const ROUTE_FACTOR = 1.3;
 
@@ -152,9 +152,9 @@ export function checkUrl(from: Point, to: Point): string {
 }
 
 /** A short walk needs no timetable; it is an estimate from the straight-line distance. */
-export function walkCheck(leg: LegRequest, checkedAt: string): TravelLegCheck | null {
+export function walkCheck(leg: LegRequest, checkedAt: string, walking: TravelWalking = 'medium'): TravelLegCheck | null {
   const km = distanceKm(leg.from, leg.to);
-  if (km > WALK_LIMIT_KM) return null;
+  if (km > WALK_LIMIT_KM[walking]) return null;
   const minutes = Math.max(1, Math.round((km * ROUTE_FACTOR / WALK_KMH) * 60));
   return {
     day_index: leg.day_index, date: leg.date, from_name: leg.from_name, to_name: leg.to_name, status: 'reference',

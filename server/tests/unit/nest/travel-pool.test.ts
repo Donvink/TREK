@@ -97,6 +97,30 @@ describe('place pool', () => {
     expect(twins.reasons).toContain('有多个同名地图候选，需确认后才能排进路线');
   });
 
+  it('ranks by the traveller profile, history and things to avoid, and says why', () => {
+    const visitedKey = poolKey(place('Old Favourite'), 'Torino, Italy');
+    const pool = buildPool({
+      sources,
+      extractions: [extraction('a', [
+        place('Museo', { kind: 'museum' }),
+        place('Spicy House', { evidence: [{ kind: 'text', image_id: null, image_order: null, quote: '超级辣的川菜' }] }),
+        place('Old Favourite'),
+        place('Bakery', { kind: 'cafe' }),
+      ])],
+      destinations: ['Torino, Italy'], focus: 'mixed', capacity: 10, decisions: new Map(),
+      preferences: { likes: ['cafe'], dislikes: ['museum'], avoid: ['辣'], visited: new Set([visitedKey]) },
+    });
+    const byName = (name: string) => pool.find((p) => p.name === name)!;
+    expect(pool[0].name).toBe('Bakery');
+    expect(byName('Bakery').reasons).toContain('符合你的画像：喜欢咖啡馆');
+    expect(byName('Museo')).toMatchObject({ recommended: false });
+    expect(byName('Museo').reasons).toContain('你的画像：不太喜欢博物馆');
+    expect(byName('Old Favourite')).toMatchObject({ recommended: false });
+    expect(byName('Old Favourite').reasons).toContain('你之前的行程去过');
+    expect(byName('Spicy House')).toMatchObject({ recommended: false });
+    expect(byName('Spicy House').warnings).toContain('帖子提到你想避开的：辣');
+  });
+
   it('keys a confirmed place by its map object and sizes plans by pace', () => {
     expect(poolKey(place('A', { selected_candidate_id: 'node:1' }), 'X')).toBe(poolKey(place('B', { selected_candidate_id: 'node:1' }), 'Y'));
     // One name match to the same map object merges differently written names; an address match does not.
@@ -157,6 +181,9 @@ describe('day plan', () => {
   it('marks walks as reference and turns timetables into verified or unverified checks', () => {
     const leg = { day_index: 0, date: '2026-09-10', from_name: 'A', to_name: 'B', from: { lat: 45.07, lng: 7.68 }, to: { lat: 45.072, lng: 7.682 }, time: '10:00' };
     const walk = walkCheck(leg, 'now')!;
+    const longer = { ...leg, to: { lat: 45.083, lng: 7.68 } };
+    expect(walkCheck(longer, 'now', 'high')?.status).toBe('reference');
+    expect(walkCheck(longer, 'now', 'low')).toBeNull();
     expect(walk.status).toBe('reference');
     expect(walk.summary).toContain('步行约');
     const far = { ...leg, to: { lat: 46.19, lng: 9.02 } };
