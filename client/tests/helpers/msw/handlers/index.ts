@@ -17,8 +17,10 @@ import { dayNotesHandlers } from './dayNotes';
 import { adminHandlers } from './admin';
 import { sharedHandlers } from './shared';
 import { externalHandlers } from './external';
+import { travelPlansHandlers } from './travelPlans';
 
 export const defaultHandlers = [
+  ...travelPlansHandlers,
   ...authHandlers,
   ...settingsHandlers,
   ...addonHandlers,

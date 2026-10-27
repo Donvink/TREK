@@ -1,6 +1,6 @@
 # 旅行规划原型：续做断点
 
-更新：2026-10-26。下一次会话先读本文件，再读[实施计划](travel-prototype-implementation-plan.md)和验证记录。
+更新：2026-10-27。下一次会话先读本文件，再读[实施计划](travel-prototype-implementation-plan.md)和验证记录。
 
 ## 目标与已确认边界
 
@@ -17,37 +17,44 @@ Bellinzona → Turin（2026 年 9 月，两人，四天含往返，公共交通�
 
 ## 已完成、实测与未完成
 
-- 已跑通本地 rednote_mcp 只读适配器，真实采集并导入 3 篇都灵餐饮帖子、34 张图片。素材按账户隔离，去重、正文指纹、失败刷新保护和图片摘要校验已实现。
-- `/travel-sources` 可搜索、查看格式化原文、图片、来源、地点卡片、原文依据和地图候选。地图位置必须用户确认。
-- 地点抽取目前是显式店名/地址的规则提取，没有 OCR，也没有接大模型；按新方案将替换为 OCR + 文本大模型。
-- **重要纠错**：「都灵 中餐厅」正文简称「家」，第 10 张名片图片才有完整名称 **House Jia** 和 **Via Giuseppe Luigi Passalacqua, 4/A, 10122 Torino**。已人工读图，并核对 https://housejia.it/，通过图片补正接口写回真实数据库。不要覆盖回「家」，也不要称为自动 OCR 成果。它是 OCR 实测的现成对照样本。
-- 当前 6 个地点：House Jia、la parentesi bistrot，以及大卖场帖中的 4 家店；均没有替用户确认地图位置。
-- 交通探测曾以明确标注的测试日期查到都灵往返候选，仅是覆盖证据。
-- 已删除 TREK 的版本公告弹窗与全部打赏入口。
-- 尚未完成：OCR 与大模型提取、地点池、生成 TREK 行程、证据关联表与「攻略依据」区块、交通三态核验、OJP 接入、对照评测，以及阶段 ② ③ 的全部内容。
+**阶段 ① 的都灵走廊已端到端跑通（2026-10-27）**：导入帖子 → 本地 OCR → OCR 加大模型提取 → 地点池取舍 → 生成 TREK 行程 → 交通三态核验 → 规划器里的「攻略依据」。
 
-证据：[首批验证](travel-prototype-evidence/first-integration.md)、[House Jia 修正](travel-prototype-evidence/jia-correction-2026-10-07.json)。
+- **OCR 与提取**：3 篇真实都灵帖子、34 张图。方案 B（本地 RapidOCR + `gemini-3.1-flash-lite`）提取出 6/6 个正确地点，House Jia 的完整名称和地址自动从第 10 张名片图读出，不再需要人工补正；方案 C（多模态直接看图）5/6 且成本约为 3 倍。每篇约 $0.0015。见 [实测记录](travel-prototype-evidence/ocr-llm-extraction-2026-10-27.md)。
+- **防编造**：模型的每条引用都要逐行出现在正文或标注的图片 OCR 里，名称和地址按词核对，对不上的丢弃或标「需核对」。
+- **地点池**：跨帖合并、按侧重和评价推荐并写明理由；保留和划掉记为偏好信号（`travel_preference_signals`，供阶段 ② 的画像使用）。
+- **生成行程**：写入标准 TREK 行程（trip、places、assignments），按地理位置分天；往返火车按出行当天查询 Transitous，写成当天备注；1.2 km 内按步行估算。演示计划「都灵美食周末（演示）」2026-11-13 至 15：去程 08:02–12:10、回程 16:45–19:58 均「已核验」，5 个地点排入日程，la parentesi bistrot 在 OSM 找不到、未排入。
+- **攻略依据**：桌面 `PlaceInspector` 和手机 `MPlaceSheet` 显示来源帖子、原文和图片引用、地图位置状态、相关交通，已用浏览器截图确认。
+- **花费**：累计模型花费约 $0.04（应用内记录 $0.018，另有调试和对照调用）。
+- **测试**：新增服务端测试 5 个文件、客户端 4 个文件；House Jia 等实测数据保存在 `.local/`。
+- 之前完成的：本地 rednote_mcp 只读采集、素材库、TREK 公告与打赏入口删除。
+
+**尚未完成（阶段 ①）**：
+
+- 对照评测中 ChatGPT 和小红书 AI 两列需要创始人用自己的账号运行，提示词与评分表见 [对照评测基线](travel-prototype-evidence/comparison-baseline-turin.md)。
+- 演示视频和 >>venture>> 申请（11/30 截止）。
+
+**已知局限**：上游 4.3.3 本身有 4 个客户端测试文件失败（AdminPage、useAdmin、DashboardPage.desktop、CollabNotes，共 71 个用例），在未改动的 `~/trek-original` 上结果相同，与本项目改动无关。营业时间部分来自地图截图，统一标未核验；按地址匹配的位置只标「参考」；多模态补漏没有接入应用（方案 B 已 6/6，暂不需要）；素材列表里仍有 7 篇合成测试素材；历史日期查不到时刻表。
+
+证据：[首批验证](travel-prototype-evidence/first-integration.md)、[House Jia 修正](travel-prototype-evidence/jia-correction-2026-10-07.json)、[OCR 与提取实测](travel-prototype-evidence/ocr-llm-extraction-2026-10-27.md)、[对照评测基线](travel-prototype-evidence/comparison-baseline-turin.md)。
 
 ## 下一步按顺序做
 
-1. **OCR 实测**：用 3 篇都灵帖子（34 张图），比较「本地 OCR（如 PaddleOCR）+ 文本模型」与「多模态模型」各能正确提取几个地点、每篇成本多少。House Jia 必须能从第 10 张图识别出来。计价前查当前官方价格。结果写入 `travel-prototype-evidence/`，再定提取方案。若 CHF 25 处理不了约 100 篇帖子，暂停并请用户决定。
-2. **对照评测基线**：同一批都灵帖子交给 ChatGPT（正文直接贴入）和小红书自带 AI，按实施计划 7.1 的五项指标记录。
-3. 按实施计划阶段 ① 打通都灵走廊：提取 → 地点池（证据、理由、勾选划掉）→ 生成 TREK 行程 → 证据关联表与「攻略依据」区块 → 交通三态。
-4. 11/20 前后录演示视频，11/25 起只修阻塞问题，11/30 前由用户审核后提交申请。
-
-可以继续做独立工作；确实缺少信息时一次问一个关键问题。
+1. **创始人运行对照评测**：按基线文档把同一输入交给 ChatGPT 和小红书 AI，填表。若 ChatGPT 在事实错误和不可行安排两项上持平，按实施计划 7.1 调整申请叙事。
+2. **录演示视频**（11/20 前后）：创建计划 → 提取 → 地点池取舍 → 生成 → 在 TREK 里看攻略依据和火车核验。演示前把原型 API 和前端按本文恢复顺序启动，用未来日期的计划。
+3. **写并提交申请**：11/25 起只修阻塞问题，11/30 前由创始人审核后提交。
+4. 阶段 ②（12 月起）：慕尼黑、威尼斯走廊（先采集素材、实测 Transitous 覆盖），偏好问卷与画像，雨天备选与天气检查，住宿区域推荐。
 
 ## 代码与数据在哪里
 
 | 范围 | 路径 |
 | --- | --- |
-| 采集、图片下载、导入、交通探测 | `scripts/travel-sources/` |
+| 采集、图片下载、导入、OCR、交通探测、多模态对照 | `scripts/travel-sources/`（`ocr_images.py`、`compare_vision.py`） |
 | 本地原型 API 启动器 | `scripts/travel-sources/run_local_api.py` |
 | 协议与类型 | `shared/src/travel-sources/`，根 barrel 已导出 |
-| 后端素材与提取 | `server/src/nest/travel-sources/` |
-| SQLite 表 | `server/src/db/schema.ts`：travel_sources、travel_source_images、travel_place_extractions |
-| 页面、hook、地点展示 | `client/src/pages/TravelSourcesPage.tsx`、`client/src/pages/travel-sources/` |
-| 测试 | `server/tests/unit/nest/travel-sources.test.ts`、`travel-places.test.ts` |
+| 后端素材、提取、计划与核验 | `server/src/nest/travel-sources/`（`travel-llm`、`llm-extract-places`、`travel-pool`、`travel-itinerary`、`travel-plans`） |
+| SQLite 表 | `server/src/db/schema.ts`：travel_sources、travel_source_images、travel_source_image_texts、travel_place_extractions、travel_plans、travel_pool_decisions、travel_preference_signals、travel_place_evidence、travel_llm_usage |
+| 页面、hook、地点展示 | `client/src/pages/TravelSourcesPage.tsx`、`client/src/pages/travel-sources/`；攻略行程 `client/src/pages/TravelPlan(s)Page.tsx`、`client/src/pages/travel-plan/`；攻略依据 `client/src/components/TravelGuide/` |
+| 测试 | `server/tests/unit/nest/travel-*.test.ts`；`client/src/pages/TravelPlanPage.test.tsx`、`client/src/pages/travel-plan/`、`client/src/components/TravelGuide/` |
 | 路由与入口 | `client/src/App.tsx`、`client/src/components/Layout/Navbar.tsx` |
 | 私有真实数据 | `.local/travel-sources/prototype.sqlite`、`turin-images.json`、`images/` |
 | 本地账户 | `.local/travel-sources/local-account.json`，不要输出或提交其内容 |
@@ -57,9 +64,9 @@ Bellinzona → Turin（2026 年 9 月，两人，四天含往返，公共交通�
 
 ## 新会话恢复顺序
 
-1. 确认仓库仍为 `/mnt/d/projects/TREK`，查看 `git status --short`，读取本文件和相关代码。工作在分支 `feat/travel-prototype`（已推送到 fork `origin` = Donvink/TREK；`upstream` 是 liketrek/TREK，不要推送到上游）。不要 reset、clean 或覆盖现有修改。`docs/personal-travel-guide-assistant-design.md`、`docs/swiss-tourism-options/`、`docs/swiss-tourism-venture-design.md` 是原有用户文件，保留。
+1. 仓库已于 2026-10-27 从 `/mnt/d/projects/TREK` 迁到 Linux 文件系统 `~/projects/TREK`（测试和构建快数倍）；旧目录只作备份，不要在里面继续改。确认在新位置，查看 `git status --short`，读取本文件和相关代码。工作在分支 `feat/travel-prototype`（已推送到 fork `origin` = Donvink/TREK；`upstream` 是 liketrek/TREK，不要推送到上游）。不要 reset、clean 或覆盖现有修改。`docs/personal-travel-guide-assistant-design.md`、`docs/swiss-tourism-options/`、`docs/swiss-tourism-venture-design.md` 是原有用户文件，保留。
 2. 先检查 3001 和 5173 是否已运行，避免重复启动。已有依赖可直接用；不要无故重新 `npm ci`。如果需要构建，**先等待 shared 构建结束，再执行 server 构建、测试或类型检查**；shared 清理 dist 时并行检查会报暂时缺失的导出错误。
-3. 需要重启 API 时，在仓库根目录执行 `python3 scripts/travel-sources/run_local_api.py`。它使用当前原型数据库和账户，日志写 `.local/travel-sources/api.log`。不再依赖 `/tmp/trek-start-api.py`。不要无故换数据库；否则看不到真实素材与 House Jia 补正。
+3. 需要重启 API 时，在仓库根目录执行 `python3 scripts/travel-sources/run_local_api.py`（`--port 3002` 可换端口，原版体验实例占着 3001）。它使用当前原型数据库和账户，日志写 `.local/travel-sources/api.log`。不再依赖 `/tmp/trek-start-api.py`。不要无故换数据库；否则看不到真实素材与 House Jia 补正。
 4. 在另一个终端启动前端：
 
    ```bash
@@ -92,4 +99,4 @@ python3 -m unittest discover -s scripts/travel-sources -p 'test_*.py'
 
 ## 可直接复制的续做提示
 
-> 在 /mnt/d/projects/TREK 继续旅行规划原型。先读取 docs/travel-prototype-checkpoint.md、实施计划和验证记录，检查现有代码与私有数据库，不重做 grilling，不覆盖当前修改。从断点“下一步”的第 1 项开始：完善带图片依据的地点补正界面与识别质量，再补自然风光素材。House Jia 已用第 10 张名片图片补正，必须保留。按文档恢复本地服务并验证；缺少登录或模型调用信息时一次问一个关键问题。
+> 在 ~/projects/TREK 继续旅行规划原型。先读取 docs/travel-prototype-checkpoint.md、实施计划和验证记录，检查现有代码与私有数据库，不重做 grilling，不覆盖当前修改。都灵走廊已端到端跑通；从断点“下一步”继续（阶段 ② ③ 的工程部分）。按文档恢复本地服务并验证；缺少登录或模型调用信息时一次问一个关键问题。

@@ -105,6 +105,66 @@ function createTables(db: Database.Database): void {
       FOREIGN KEY(user_id, source_id) REFERENCES travel_sources(user_id, source_id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS travel_source_image_texts (
+      user_id INTEGER NOT NULL,
+      source_id TEXT NOT NULL,
+      image_id TEXT NOT NULL,
+      engine TEXT NOT NULL,
+      text TEXT NOT NULL,
+      read_at TEXT NOT NULL,
+      PRIMARY KEY(user_id, source_id, image_id),
+      FOREIGN KEY(user_id, source_id, image_id) REFERENCES travel_source_images(user_id, source_id, image_id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_plans (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      plan_id TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY(user_id, plan_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_pool_decisions (
+      user_id INTEGER NOT NULL,
+      plan_id TEXT NOT NULL,
+      pool_key TEXT NOT NULL,
+      decision TEXT NOT NULL CHECK(decision IN ('include', 'exclude')),
+      decided_at TEXT NOT NULL,
+      PRIMARY KEY(user_id, plan_id, pool_key),
+      FOREIGN KEY(user_id, plan_id) REFERENCES travel_plans(user_id, plan_id) ON DELETE CASCADE
+    );
+
+    -- Append-only; the raw material for the long-term traveller profile.
+    CREATE TABLE IF NOT EXISTS travel_preference_signals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      plan_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_place_evidence (
+      trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+      place_id INTEGER NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL,
+      plan_id TEXT NOT NULL,
+      pool_key TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      PRIMARY KEY(trip_id, place_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_llm_usage (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      purpose TEXT NOT NULL,
+      model TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL,
+      output_tokens INTEGER NOT NULL,
+      cost_usd REAL NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS trips (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

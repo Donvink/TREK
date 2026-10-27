@@ -6,7 +6,7 @@ import { useSettingsStore } from '../../store/settingsStore'
 import { useAddonStore } from '../../store/addonStore'
 import { usePluginStore } from '../../store/pluginStore'
 import { useTranslation } from '../../i18n'
-import { Plane, LogOut, Settings, ChevronDown, Shield, ArrowLeft, Users, Moon, Sun, Monitor, CalendarDays, Briefcase, Globe, Compass, BookOpen, Bookmark } from 'lucide-react'
+import { Plane, LogOut, Settings, ChevronDown, Shield, ArrowLeft, Users, Moon, Sun, Monitor, CalendarDays, Briefcase, Globe, Compass, BookOpen, Bookmark, Route } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import InAppNotificationBell from './InAppNotificationBell.tsx'
 import { resolvePluginIcon } from '../shared/PluginIcon'
@@ -167,6 +167,7 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }:
         >
           {[{ id: '__trips', path: '/dashboard', label: t('nav.myTrips'), Icon: Briefcase },
             { id: '__travel_sources', path: '/travel-sources', label: locale.startsWith('zh') ? '旅行素材' : 'Travel sources', Icon: BookOpen },
+            { id: '__travel_plans', path: '/travel-plans', label: locale.startsWith('zh') ? '攻略行程' : 'Guide plans', Icon: Route },
             ...globalAddons.map(a => ({ id: a.id, path: `/${a.id}`, label: getAddonName(a), Icon: ADDON_ICONS[a.icon] || CalendarDays })),
             ...pagePlugins.map(p => ({ id: `plugin:${p.id}`, path: `/plugins/${p.id}`, label: p.name, Icon: resolvePluginIcon(p.icon) })),
             // Empty in this repository — see client/src/managed.

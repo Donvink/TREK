@@ -20,6 +20,9 @@ export class TravelSourcesService {
     const images = this.db.all<{ source_id: string; image_id: string }>(
       'SELECT source_id, image_id FROM travel_source_images WHERE user_id = ?', userId,
     );
+    const texts = this.db.all<{ source_id: string; image_id: string }>(
+      'SELECT source_id, image_id FROM travel_source_image_texts WHERE user_id = ?', userId,
+    );
     return this.db
       .all<{
         payload: string;
@@ -29,7 +32,8 @@ export class TravelSourcesService {
         const saved = extractions.find(extraction => extraction.source_id === note.source_id);
         const extraction = saved ? JSON.parse(saved.payload) : undefined;
         return { ...note, place_extraction: extraction ? { ...extraction, stale: extraction.source_content_hash !== note.content_hash } : undefined,
-          saved_image_ids: images.filter(image => image.source_id === note.source_id).map(image => image.image_id) };
+          saved_image_ids: images.filter(image => image.source_id === note.source_id).map(image => image.image_id),
+          read_image_ids: texts.filter(text => text.source_id === note.source_id).map(text => text.image_id) };
       });
   }
 

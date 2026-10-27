@@ -35,7 +35,7 @@ describe('travel source import', () => {
       'CREATE TABLE travel_sources (user_id INTEGER, source_id TEXT, payload TEXT, collected_at TEXT, PRIMARY KEY(user_id, source_id))',
     );
     db.exec('CREATE TABLE travel_source_images (user_id INTEGER, source_id TEXT, image_id TEXT, content_type TEXT, data BLOB, PRIMARY KEY(user_id, source_id, image_id))');
-    db.exec('CREATE TABLE travel_place_extractions (user_id INTEGER, source_id TEXT, payload TEXT, PRIMARY KEY(user_id, source_id))');
+    db.exec('CREATE TABLE travel_place_extractions (user_id INTEGER, source_id TEXT, payload TEXT, PRIMARY KEY(user_id, source_id)); CREATE TABLE travel_source_image_texts (user_id INTEGER, source_id TEXT, image_id TEXT, engine TEXT, text TEXT, read_at TEXT, PRIMARY KEY(user_id, source_id, image_id))');
     service = new TravelSourcesService(new DatabaseService(db));
   });
   afterEach(() => db.close());

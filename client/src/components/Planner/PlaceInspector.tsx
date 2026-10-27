@@ -29,6 +29,7 @@ import { useToast } from '../shared/Toast'
 import { useTranslation, translateApiError } from '../../i18n'
 import { usePluginStore } from '../../store/pluginStore'
 import PluginFrame from '../Plugins/PluginFrame'
+import PlaceGuideEvidence from '../TravelGuide/PlaceGuideEvidence'
 import type { Place, Category, Day, Assignment, Reservation, TripFile, AssignmentsMap } from '../../types'
 import type { CollectionStatus } from '@trek/shared'
 import { splitReservationDateTime, formatTime, formatMoney } from '../../utils/formatters'
@@ -504,6 +505,8 @@ export default function PlaceInspector({
               )))}
             </div>
           )}
+
+          {mode === 'trip' && <PlaceGuideEvidence tripId={trip?.id} placeId={place.id} />}
 
           {/* Place-detail plugin slots (#1429): sandboxed, scoped to this place. */}
           {mode === 'trip' && placeDetailPlugins.length > 0 && (

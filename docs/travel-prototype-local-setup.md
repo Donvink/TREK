@@ -1,6 +1,6 @@
 # 本地采集与旅行素材库
 
-> 第一批实现：只读自动采集适配器、版本化 JSON、账户隔离的导入与来源查看。推荐、三方案、天气重排与图文导出仍在后续阶段。
+> 已实现：只读自动采集适配器、版本化 JSON、账户隔离的导入与来源查看；图片本地 OCR；OCR 加大模型的地点提取；地点池取舍；生成 TREK 行程并核验公共交通（2026-10-27）。天气调整、住宿推荐和长期画像仍在后续阶段。
 
 ## 启动 TREK
 
@@ -79,21 +79,55 @@ python3 scripts/travel-sources/import_rednote.py \
   --account .local/travel-sources/local-account.json
 ```
 
-此导入命令默认连接 `http://127.0.0.1:3001`，会输出导入数量，不输出账户密码。
+此导入命令默认连接 `http://127.0.0.1:3001`（`--api-url` 可改），会输出导入数量，不输出账户密码。原型 API 可用 `python3 scripts/travel-sources/run_local_api.py --port 3002` 换端口启动；前端用 `TREK_DEV_API=http://127.0.0.1:3002` 指向它。
 
 正文成功读取仍不等于事实已核验。空正文、登录失败或读取失败会保留状态，不作为可用内容。标题、作者、发布时间和正文可查看；原帖链接移除查询参数，某些帖子仍可能要求本人登录后才能打开。
 
 重复帖子按账户和帖子 ID 合并；更旧的采集或失败刷新不会覆盖已有成功内容。导入结果报告新增、更新和跳过数量。素材不会被其他 TREK 账户读取。
 
+## 图片文字识别（OCR）
+
+关键信息常常只在图片里（店名名片、菜单、地图截图）。导入图片后，在本机读出图片文字并上传：
+
+```bash
+cd scripts/travel-sources
+../../.local/travel-sources/venv/bin/python ocr_images.py \
+  --batch ../../.local/travel-sources/turin-images.json \
+  --account ../../.local/travel-sources/local-account.json \
+  --report ../../.local/travel-sources/ocr-report.json
+```
+
+OCR 使用 RapidOCR，纯 CPU 运行，34 张图约 22 秒。只上传识别出的文字，不上传图片（图片已在 TREK 里）；同一张图重复运行会覆盖旧文字。依赖见 `requirements.txt`，首次运行会下载识别模型。
+
+## 配置大模型
+
+地点提取复用 TREK 的 AI Parsing 模块配置。管理员在 Admin → Addons 打开 AI Parsing，选择 OpenAI 兼容接口：
+
+- Base URL：`https://generativelanguage.googleapis.com/v1beta/openai`
+- 模型：`gemini-3.1-flash-lite`
+- API Key：自己的 Gemini key（加密保存在数据库）
+
+只接受登记了价格的模型（见 `server/src/nest/travel-sources/travel-llm.service.ts` 的 `TRAVEL_LLM_PRICES`），每次调用的 token 和费用写入 `travel_llm_usage` 表，累计达到 USD 25 后拒绝继续调用。没有配置模型时退回规则提取。
+
 ## 地点提取与地图候选
 
-素材卡片中的“提取地点并匹配地图”会读取正文中明确的店名、`📍` 名称或“餐馆的名字是……”描述，保留原帖地址、特色、价格和营业时间的原文依据。当前是有边界的规则提取，尚不覆盖任意叙述、图片文字识别或跨帖地点合并；未写出的信息保持未知，不调用收费模型。
+素材卡片中的“提取地点并匹配地图”，或攻略行程页面的“提取地点”，会把正文和各图 OCR 文字交给模型，要求每个地点、价格、营业时间都附原文摘录。程序逐条核对：每行引用都必须出现在正文或所标注的那张图里，名称和地址按词核对，没有依据的地点整条丢弃。实测见 [OCR 与大模型提取实测](travel-prototype-evidence/ocr-llm-extraction-2026-10-27.md)。
 
-填写“地图搜索城市”（都灵案例默认 `Torino, Italy`）后，复用免费 Nominatim 搜索。优先按名称，空结果时按原帖地址寻找候选；每篇最多处理 12 个地点，每处最多展示 5 个候选，逐个请求并遵守现有地图限速。页面为这个操作保留最多三分钟的等待窗口，失败可重新匹配。
+填写地图搜索城市（都灵案例为 `Torino, Italy`）后，先定位城市作为搜索偏置，再用免费 Nominatim 按名称搜索，空结果时按地址搜索；每篇最多 12 个地点，每处最多 5 个候选。候选标出地址匹配、多个同名候选、街道或门牌差异。只有本人点击“确认是这个地点”才算确认位置；确认位置不等于价格、营业时间或体验已核验。
 
-候选提供 OpenStreetMap 链接，并标出地址匹配、多个候选、街道或门牌差异。只有本人点击“确认是这个地点”才保存选中的地图位置；位置确认不等于价格、营业时间或帖子体验已核验。过短且没有地址的名称保留为待确认线索，不计入地点数，不进行地图猜测，也不能确认位置。人工查看已保存的图片后，可通过所属账户的图片补正接口填写完整名称、地址和图片依据；重新提取会保留相同正文版本下的补正。这不是自动图片 OCR。
+结果按账户与来源正文指纹保存；正文变化时旧结果提示过期。
 
-结果按账户与来源正文指纹保存。刷新素材库可继续查看；正文变化时旧提取结果会提示过期并禁止确认。更换搜索城市后需重新匹配，卡片仍显示上次实际使用的城市。
+## 从攻略生成行程
+
+打开 `/travel-plans`（导航栏“攻略行程”）：
+
+1. 填出发地、1–3 个目的地、日期、人数、侧重和节奏，创建计划。
+2. 在“攻略素材”里对相关帖子点“提取地点”。
+3. “地点池”合并多篇帖子里的同一地点，按侧重、提及次数和评价给出推荐和理由；点“保留”或“划掉”覆盖推荐，切换侧重会重新推荐。勾选和划掉记入 `travel_preference_signals`，供以后的长期画像使用。
+4. “生成行程”新建一个标准 TREK 行程：已选地点按地理位置分到每天，往返和城市间交通按出行当天查询 Transitous，结果写成当天的备注；相距 1.2 km 以内的两站按步行估算。每段交通标“已核验 / 参考 / 未核验”。
+5. 在 TREK 规划器里点开地点，“攻略依据”显示来源帖子、原文和图片引用、地图位置状态和相关交通。
+
+时刻表只覆盖当前和未来的日期，历史日期的交通会标为未核验。
 
 ## 交通覆盖探测
 
@@ -111,7 +145,8 @@ python3 scripts/travel-sources/probe_transit.py \
 ```bash
 python3 -m unittest discover -s scripts/travel-sources -p 'test_*.py'
 npm run build --workspace=shared
-npm run test --workspace=server -- tests/unit/nest/travel-sources.test.ts tests/unit/nest/travel-places.test.ts
+npm run test --workspace=server -- tests/unit/nest/travel-sources.test.ts tests/unit/nest/travel-places.test.ts tests/unit/nest/travel-extract-llm.test.ts tests/unit/nest/travel-pool.test.ts tests/unit/nest/travel-plans.test.ts
+(cd client && npx vitest run src/pages/TravelPlanPage.test.tsx src/pages/travel-plan src/components/TravelGuide)
 npm run typecheck --workspace=shared
 npm run typecheck --workspace=server
 npm run typecheck:tests --workspace=server

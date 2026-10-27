@@ -15,6 +15,7 @@ import { useSaveToCollectionStore } from '../../../../store/saveToCollectionStor
 import { collectionTargetFromPlace } from '../lib/collectionTarget'
 import { getCategoryIcon } from '../../../../components/shared/categoryIcons'
 import PlaceRating from '../../../../components/shared/StarRating'
+import PlaceGuideEvidence from '../../../../components/TravelGuide/PlaceGuideEvidence'
 import MarkdownText from '../../../../components/shared/MarkdownText'
 import TrackColorPicker from '../../../../components/shared/TrackColorPicker'
 import { resolveTrackColor, inheritedTrackColor } from '../../../../components/Map/trackColors'
@@ -355,6 +356,8 @@ export default function MPlaceSheet({ planner, shell }: MTripSheetsProps) {
                 </div>
               </>
             )}
+
+            <PlaceGuideEvidence tripId={planner.tripId} placeId={place.id} className="mt-3" />
 
             {/* ── Track colour (#776) ── */}
             {place.route_geometry && (

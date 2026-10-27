@@ -1,5 +1,6 @@
 import { DatabaseService } from '../../../src/nest/database/database.service';
 import { MapsService } from '../../../src/nest/maps/maps.service';
+import { TravelLlmService } from '../../../src/nest/travel-sources/travel-llm.service';
 import { TravelPlacesService } from '../../../src/nest/travel-sources/travel-places.service';
 import { TravelSourcesService } from '../../../src/nest/travel-sources/travel-sources.service';
 import { extractTravelPlaces } from '../../../src/nest/travel-sources/extract-travel-places';
@@ -25,11 +26,11 @@ describe('travel place extraction and source provenance', () => {
   let search: ReturnType<typeof vi.fn>;
   beforeEach(() => {
     database = new Database(':memory:');
-    database.exec('CREATE TABLE travel_sources (user_id INTEGER, source_id TEXT, payload TEXT, collected_at TEXT, PRIMARY KEY(user_id, source_id)); CREATE TABLE travel_source_images (user_id INTEGER, source_id TEXT, image_id TEXT); CREATE TABLE travel_place_extractions (user_id INTEGER, source_id TEXT, payload TEXT, PRIMARY KEY(user_id, source_id))');
+    database.exec('CREATE TABLE travel_sources (user_id INTEGER, source_id TEXT, payload TEXT, collected_at TEXT, PRIMARY KEY(user_id, source_id)); CREATE TABLE travel_source_images (user_id INTEGER, source_id TEXT, image_id TEXT); CREATE TABLE travel_place_extractions (user_id INTEGER, source_id TEXT, payload TEXT, PRIMARY KEY(user_id, source_id)); CREATE TABLE travel_source_image_texts (user_id INTEGER, source_id TEXT, image_id TEXT, engine TEXT, text TEXT, read_at TEXT, PRIMARY KEY(user_id, source_id, image_id))');
     const db = new DatabaseService(database);
     sources = new TravelSourcesService(db);
     search = vi.fn().mockResolvedValue([candidate]);
-    places = new TravelPlacesService(db, { searchNominatim: search } as unknown as MapsService);
+    places = new TravelPlacesService(db, { searchNominatim: search } as unknown as MapsService, { config: () => null } as unknown as TravelLlmService);
     sources.importBatch(1, batch());
   });
   afterEach(() => database.close());
@@ -64,7 +65,8 @@ describe('travel place extraction and source provenance', () => {
     expect(result.places[0].selected_candidate_id).toBeNull();
     expect(result.places[0].candidates[0].url).toBe('https://www.openstreetmap.org/node/123');
     await places.extract(1, sourceId, 'Torino, Italy');
-    expect(search).toHaveBeenCalledTimes(2);
+    // The city once for a search bias, then each place; the unchanged second run searches nothing.
+    expect(search).toHaveBeenCalledTimes(3);
     expect(sources.list(1)[0].place_extraction?.places).toHaveLength(2);
     await expect(places.extract(2, sourceId, 'Torino, Italy')).rejects.toThrow();
     expect(sources.list(2)).toEqual([]);
@@ -74,7 +76,8 @@ describe('travel place extraction and source provenance', () => {
   });
 
   it('marks address-only candidates and ambiguous search results for review', async () => {
-    search.mockResolvedValueOnce([]).mockResolvedValueOnce([candidate, { ...candidate, osm_id: 'way:456' }]);
+    // City bias, then the name (nothing), then the address (two hits).
+    search.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([candidate, { ...candidate, osm_id: 'way:456' }]);
     const result = await places.extract(1, sourceId, 'Torino, Italy');
     expect(result.places[0].candidates[0].match_basis).toBe('address');
     expect(result.places[0].warnings.join()).toContain('尚未确认');
@@ -160,6 +163,34 @@ describe('travel place extraction and source provenance', () => {
     expect(refreshed.places[0].address).toBe(correction.address);
     expect(refreshed.places[0].name_evidence).toBe(correction.evidence);
     expect(refreshed.places[0].selected_candidate_id).toBeNull();
-    expect(search).toHaveBeenCalledWith('Example Jia, Torino, Italy', 'it', 'background');
+    expect(search).toHaveBeenCalledWith('Example Jia, Torino, Italy', 'it', 'background', { lat: 45.07, lng: 7.69 });
+  });
+
+  it('extracts with the model from text plus stored OCR, and only for images of the caller\'s source', async () => {
+    const imageId = 'c'.repeat(64);
+    database.prepare('INSERT INTO travel_source_images (user_id, source_id, image_id) VALUES (1, ?, ?)').run(sourceId, imageId);
+    const stored = JSON.parse((database.prepare('SELECT payload FROM travel_sources WHERE source_id = ?').get(sourceId) as { payload: string }).payload);
+    stored.images = [{ order: 4, image_id: imageId, filename: `${imageId}.png`, content_type: 'image/png', status: 'available', failure_reason: null }];
+    database.prepare('UPDATE travel_sources SET payload = ? WHERE source_id = ?').run(JSON.stringify(stored), sourceId);
+    expect(() => places.saveImageText(1, sourceId, 'd'.repeat(64), 'rapidocr', 'x')).toThrow('not saved');
+    expect(() => places.saveImageText(2, sourceId, imageId, 'rapidocr', 'x')).toThrow('not saved');
+    expect(() => places.saveImageText(1, 'bad', imageId, 'rapidocr', 'x')).toThrow('Invalid');
+    places.saveImageText(1, sourceId, imageId, 'rapidocr', 'Card Bistrot\nVia Card 3');
+    places.saveImageText(1, sourceId, imageId, 'rapidocr', 'Card Bistrot\nVia Card 3, Torino');
+    expect(sources.list(1)[0].read_image_ids).toEqual([imageId]);
+
+    const chatJson = vi.fn().mockResolvedValue({
+      model: 'gemini-3.1-flash-lite', costUsd: 0.001,
+      json: { places: [{ name: 'Card Bistrot', address: 'Via Card 3, Torino', kind: 'restaurant', sentiment: 'positive', evidence: [{ source: 'image', image: 4, quote: 'Card Bistrot' }] }] },
+    });
+    const withModel = new TravelPlacesService(new DatabaseService(database), { searchNominatim: search } as unknown as MapsService,
+      { config: () => ({ model: 'gemini-3.1-flash-lite' }), chatJson } as unknown as TravelLlmService);
+    const result = await withModel.extract(1, sourceId, 'Torino, Italy');
+    expect(chatJson.mock.calls[0][3]).toContain('【图4】\nCard Bistrot\nVia Card 3, Torino');
+    expect(result).toMatchObject({ version: 3, extractor: 'llm', model: 'gemini-3.1-flash-lite' });
+    expect(result.places[0]).toMatchObject({ name: 'Card Bistrot', address: 'Via Card 3, Torino', name_image_id: imageId, map_status: 'candidates' });
+    // Unchanged source and city: the saved model result is reused without another call.
+    await withModel.extract(1, sourceId, 'Torino, Italy');
+    expect(chatJson).toHaveBeenCalledTimes(1);
   });
 });

@@ -43,6 +43,8 @@ const ForgotPasswordPage = lazyWithRetry(() => import('./pages/ForgotPasswordPag
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'))
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'))
 const TravelSourcesPage = lazyWithRetry(() => import('./pages/TravelSourcesPage'))
+const TravelPlansPage = lazyWithRetry(() => import('./pages/TravelPlansPage'))
+const TravelPlanPage = lazyWithRetry(() => import('./pages/TravelPlanPage'))
 const TripPlannerPage = lazyWithRetry(() => import('./pages/TripPlannerPage'))
 const FilesPage = lazyWithRetry(() => import('./pages/FilesPage'))
 const AdminPage = lazyWithRetry(() => import('./pages/AdminPage'))
@@ -394,6 +396,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/travel-sources" element={<ProtectedRoute><TravelSourcesPage /></ProtectedRoute>} />
+          <Route path="/travel-plans" element={<ProtectedRoute><TravelPlansPage /></ProtectedRoute>} />
+          <Route path="/travel-plans/:planId" element={<ProtectedRoute><TravelPlanPage /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute redirectAuthed><LoginPage /></PublicRoute>} />
           <Route path="/shared/:token" element={<PublicRoute><SharedTripPage /></PublicRoute>} />
           <Route path="/public/journey/:token" element={<PublicRoute><JourneyPublicPage /></PublicRoute>} />

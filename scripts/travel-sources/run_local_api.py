@@ -1,10 +1,14 @@
 """Restart the existing private prototype database and account without /tmp helpers."""
+import argparse
 import json
 import os
 from pathlib import Path
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--port', type=int, default=3001)
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     runtime = root / '.local/travel-sources'
     credentials = runtime / 'local-account.json'
@@ -19,10 +23,10 @@ def main():
     env.update({
         'ADMIN_EMAIL': account['email'], 'ADMIN_PASSWORD': account['password'],
         'TREK_DB_FILE': str(runtime / 'prototype.sqlite'), 'HOST': '127.0.0.1',
-        'PORT': '3001', 'NODE_ENV': 'development', 'COOKIE_SECURE': 'false',
+        'PORT': str(args.port), 'NODE_ENV': 'development', 'COOKIE_SECURE': 'false',
         'APP_URL': 'http://127.0.0.1:5173',
     })
-    print('Starting prototype API on 127.0.0.1:3001; log: .local/travel-sources/api.log', flush=True)
+    print(f'Starting prototype API on 127.0.0.1:{args.port}; log: .local/travel-sources/api.log', flush=True)
     log = os.open(str(runtime / 'api.log'), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     os.dup2(log, 1)
     os.dup2(log, 2)
