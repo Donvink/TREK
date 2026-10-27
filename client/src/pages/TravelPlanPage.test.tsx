@@ -141,6 +141,29 @@ describe('TravelPlanPage', () => {
     expect(await screen.findByText('已设为住宿：Hotel Dock Milano（Via Cernaia 1）')).toBeInTheDocument()
   })
 
+  it('FE-TRAVEL-PLAN-007: asks the price question first when it is due, then generates for free either way', async () => {
+    const calls: string[] = []
+    server.use(
+      http.get(`/api/travel-plans/${planId}`, () => HttpResponse.json({ ...detail(), price_test_due: true })),
+      http.post(`/api/travel-plans/${planId}/price-test`, async ({ request }) => {
+        calls.push(`price:${((await request.json()) as { choice: string }).choice}`)
+        return HttpResponse.json(detail())
+      }),
+      http.post(`/api/travel-plans/${planId}/generate`, () => {
+        calls.push('generate')
+        return HttpResponse.json(detail({ trip_id: 3, generated_at: '2026-10-27T10:00:00.000Z' }))
+      }),
+    )
+    renderPlan()
+    await userEvent.click(await screen.findByRole('button', { name: '生成行程' }))
+    expect(screen.getByRole('dialog', { name: '想听听你的意见' })).toHaveTextContent('现在仍然免费，不会扣任何费用')
+    expect(calls).toEqual([])
+    await userEvent.click(screen.getByRole('button', { name: '不会，只用免费的' }))
+    await waitFor(() => expect(calls).toEqual(['price:would_not_pay', 'generate']))
+    expect(await screen.findByRole('link', { name: '打开生成的行程 →' })).toHaveAttribute('href', '/trips/3')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('FE-TRAVEL-PLAN-003: keeps the plan on screen and says why when generation fails', async () => {
     server.use(
       http.get(`/api/travel-plans/${planId}`, () => HttpResponse.json(detail())),
@@ -208,5 +231,32 @@ describe('TravelPlansPage', () => {
     )
     renderList()
     await waitFor(() => expect(screen.getByRole('button', { name: '紧凑' })).toHaveAttribute('aria-pressed', 'true'))
+  })
+
+  it('FE-TRAVEL-PLANS-004: shows the validation numbers to an admin only', async () => {
+    server.use(
+      http.get('/api/travel-plans', () => HttpResponse.json({ plans: [] })),
+      http.get('/api/travel-plans/metrics', () => HttpResponse.json({
+        users: 5, plans: 8, generated_plans: 6, median_minutes_to_trip: 12.4, places_per_extraction: 3.5,
+        legs: { verified: 10, reference: 4, unverified: 2 }, price_test: { would_pay: 2, would_not_pay: 3 },
+        events: [{ kind: 'generate', count: 6, failed: 1, avg_ms: 2600 }],
+      })),
+    )
+    renderList()
+    expect(await screen.findByRole('heading', { name: '使用指标（仅管理员可见）' })).toBeInTheDocument()
+    expect(screen.getByText('12 分钟')).toBeInTheDocument()
+    expect(screen.getByText('2 / 5')).toBeInTheDocument()
+    expect(screen.getByText('生成行程')).toBeInTheDocument()
+    expect(screen.getByText('2.6 秒')).toBeInTheDocument()
+  })
+
+  it('FE-TRAVEL-PLANS-005: hides the numbers from everyone else', async () => {
+    server.use(
+      http.get('/api/travel-plans', () => HttpResponse.json({ plans: [] })),
+      http.get('/api/travel-plans/metrics', () => HttpResponse.json({ error: 'Admin access required' }, { status: 403 })),
+    )
+    renderList()
+    await screen.findByText('还没有计划。填上面的表单创建第一个。')
+    expect(screen.queryByText('使用指标（仅管理员可见）')).not.toBeInTheDocument()
   })
 })

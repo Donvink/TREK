@@ -3,6 +3,7 @@ import PageShell from '../components/Layout/PageShell'
 import PlacePool from './travel-plan/PlacePool'
 import PlanResult from './travel-plan/PlanResult'
 import SourceList from './travel-plan/SourceList'
+import PriceQuestion from './travel-plan/PriceQuestion'
 import StayList from './travel-plan/StayList'
 import { FOCUS_OPTIONS } from './travel-plan/travelPlanModel'
 import { useTravelPlan } from './travel-plan/useTravelPlan'
@@ -10,7 +11,7 @@ import { useTravelPlan } from './travel-plan/useTravelPlan'
 export default function TravelPlanPage() {
   const {
     detail, loading, busy, error, extractCity, setExtractCity,
-    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, hotelQueries, setHotelQuery, setHotel, included, poolByKey,
+    extract, extractPending, setFocus, decide, generate, askingPrice, answerPrice, checkWeather, applyWeather, hotelQueries, setHotelQuery, setHotel, included, poolByKey,
   } = useTravelPlan()
 
   return (
@@ -30,6 +31,7 @@ export default function TravelPlanPage() {
             <SourceList sources={detail.sources} destinations={detail.plan.destinations} extractCity={extractCity} setExtractCity={setExtractCity}
               busy={busy} extract={extract} extractPending={extractPending} />
             <PlacePool pool={detail.pool} focus={detail.plan.focus} busy={busy} setFocus={setFocus} decide={decide} />
+            {askingPrice && <PriceQuestion answer={answerPrice} />}
             <PlanResult plan={detail.plan} includedCount={included.length} poolByKey={poolByKey} busy={busy} generate={generate}
               checkWeather={checkWeather} applyWeather={applyWeather} />
             <StayList stays={detail.plan.stays ?? []} busy={busy} hotelQueries={hotelQueries} setHotelQuery={setHotelQuery} setHotel={setHotel} />

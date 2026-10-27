@@ -1,10 +1,11 @@
 import type { User } from '../../types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { TravelSourcesService } from './travel-sources.service';
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Post, Res, UseInterceptors } from '@nestjs/common';
 import { isImageBytes, travelManualNoteSchema, travelSourceBatchSchema, travelSourceImageBytesSchema, travelSourceImageTextSchema } from '@trek/shared';
 import { travelPlaceExtractionRequestSchema, travelPlaceConfirmRequestSchema, travelPlaceImageIdentitySchema } from '@trek/shared';
 import { TravelPlacesService } from './travel-places.service';
+import { TravelMetricsInterceptor } from './travel-metrics.interceptor';
 
 import { createZodDto } from 'nestjs-zod';
 import type { Response } from 'express';
@@ -18,6 +19,7 @@ export class TravelManualNoteDto extends createZodDto(travelManualNoteSchema) {}
 export class TravelSourceImageUploadDto extends createZodDto(travelSourceImageBytesSchema) {}
 
 @Controller('api/travel-sources')
+@UseInterceptors(TravelMetricsInterceptor)
 export class TravelSourcesController {
   constructor(private readonly sources: TravelSourcesService, private readonly places: TravelPlacesService) {}
 

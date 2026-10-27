@@ -11,6 +11,7 @@ import type { PlacesService } from '../../../src/nest/places/places.service';
 import type { TransitService } from '../../../src/nest/transit/transit.service';
 import type { TripsService } from '../../../src/nest/trips/trips.service';
 import type { TravelProfileService } from '../../../src/nest/travel-sources/travel-profile.service';
+import type { TravelMetricsService } from '../../../src/nest/travel-sources/travel-metrics.service';
 import type { WeatherService } from '../../../src/nest/weather/weather.service';
 
 vi.mock('../../../src/db/database', () => ({}));
@@ -69,6 +70,7 @@ describe('weather check and swaps on a generated plan', () => {
       db, maps as unknown as MapsService, transit as unknown as TransitService, trips as unknown as TripsService,
       places as unknown as PlacesService, assignments as unknown as AssignmentsService, { create: vi.fn() } as unknown as DayNotesService,
       profiles as unknown as TravelProfileService,
+      { priceTestDue: () => false } as unknown as TravelMetricsService,
     );
     forecast = vi.fn(async () => ({ type: 'forecast', main: 'Rain', temp: 8, temp_min: 6, temp_max: 10, precipitation_probability_max: 90, description: '' }));
     weather = new TravelPlanWeatherService(db, plans, { get: forecast } as unknown as WeatherService, maps as unknown as MapsService, assignments as unknown as AssignmentsService);

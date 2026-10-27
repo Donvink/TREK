@@ -12,6 +12,7 @@ import type { PlacesService } from '../../../src/nest/places/places.service';
 import type { TransitService } from '../../../src/nest/transit/transit.service';
 import type { TripsService } from '../../../src/nest/trips/trips.service';
 import type { TravelProfileService } from '../../../src/nest/travel-sources/travel-profile.service';
+import type { TravelMetricsService } from '../../../src/nest/travel-sources/travel-metrics.service';
 
 vi.mock('../../../src/db/database', () => ({}));
 
@@ -68,6 +69,7 @@ describe('booking a hotel for a generated plan', () => {
       db, maps as unknown as MapsService, transit as unknown as TransitService, trips as unknown as TripsService,
       places as unknown as PlacesService, { createAssignment: vi.fn() } as unknown as AssignmentsService, { create: vi.fn() } as unknown as DayNotesService,
       profiles as unknown as TravelProfileService,
+      { priceTestDue: () => false } as unknown as TravelMetricsService,
     );
     accommodations = { create: vi.fn() };
     stays = new TravelPlanStayService(db, plans, maps as unknown as MapsService, places as unknown as PlacesService, accommodations as unknown as AccommodationsService);

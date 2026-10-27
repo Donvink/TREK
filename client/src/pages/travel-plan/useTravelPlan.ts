@@ -63,7 +63,22 @@ export function useTravelPlan() {
   const setFocus = (focus: TravelPlanFocus) => run('focus', () => travelPlansApi.setFocus(planId, focus), '切换侧重失败。')
   const decide = (poolKey: string, decision: 'include' | 'exclude' | null) =>
     run(`decide:${poolKey}`, () => travelPlansApi.decide(planId, poolKey, decision), '保存取舍失败。')
-  const generate = () => run('generate', () => travelPlansApi.generate(planId), '生成行程失败，请重试。')
+  const [askingPrice, setAskingPrice] = useState(false)
+  /** From the third plan on, the price question comes first; generating stays free whatever the answer. */
+  const generate = () => {
+    if (detail?.price_test_due) {
+      setAskingPrice(true)
+      return
+    }
+    void run('generate', () => travelPlansApi.generate(planId), '生成行程失败，请重试。')
+  }
+  const answerPrice = (choice: 'would_pay' | 'would_not_pay') => {
+    setAskingPrice(false)
+    void run('generate', async () => {
+      await travelPlansApi.answerPriceTest(planId, choice)
+      return travelPlansApi.generate(planId)
+    }, '生成行程失败，请重试。')
+  }
   const setHotelQuery = (stayIndex: number, query: string) => setHotelQueries((current) => ({ ...current, [stayIndex]: query }))
   const setHotel = (stayIndex: number) =>
     run(`hotel:${stayIndex}`, () => travelPlansApi.setHotel(planId, stayIndex, (hotelQueries[stayIndex] ?? '').trim()), '找不到这家酒店，请换成完整名称或地址再试。')
@@ -76,6 +91,6 @@ export function useTravelPlan() {
 
   return {
     detail, loading, busy, error, extractCity, setExtractCity,
-    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, hotelQueries, setHotelQuery, setHotel, included, poolByKey,
+    extract, extractPending, setFocus, decide, generate, askingPrice, answerPrice, checkWeather, applyWeather, hotelQueries, setHotelQuery, setHotel, included, poolByKey,
   }
 }

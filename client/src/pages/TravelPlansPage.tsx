@@ -2,11 +2,12 @@ import { Link } from 'react-router'
 import PageShell from '../components/Layout/PageShell'
 import { FOCUS_OPTIONS, PACE_OPTIONS } from './travel-plan/travelPlanModel'
 import { useTravelPlans } from './travel-plan/useTravelPlans'
+import MetricsPanel from './travel-plan/MetricsPanel'
 
 const fieldClass = 'mt-1 w-full rounded-lg border border-edge bg-surface-input px-3 py-2 text-content'
 
 export default function TravelPlansPage() {
-  const { plans, loading, form, update, saving, error, create } = useTravelPlans()
+  const { plans, loading, form, update, saving, error, create, metrics } = useTravelPlans()
 
   return (
     <PageShell className="bg-surface-secondary">
@@ -97,6 +98,7 @@ export default function TravelPlansPage() {
             </ul>
           )}
         </section>
+        {metrics && <MetricsPanel metrics={metrics} />}
       </main>
     </PageShell>
   )

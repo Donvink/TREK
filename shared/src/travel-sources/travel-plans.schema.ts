@@ -180,6 +180,8 @@ export interface TravelPlan extends TravelPlanInput {
 
 export interface TravelPlanDetail {
   plan: TravelPlan;
+  /** Ask the price question before generating this plan (third plan onwards, asked once per plan). */
+  price_test_due?: boolean;
   pool: TravelPoolPlace[];
   /** Sources whose extraction city matches a destination, newest first. */
   sources: {
@@ -202,4 +204,19 @@ export interface TravelPlaceGuideEvidence {
   reasons: string[];
   warnings: string[];
   legs: TravelLegCheck[];
+}
+
+/** The price question: generation stays free whatever the answer. */
+export const travelPriceAnswerSchema = z.object({ choice: z.enum(['would_pay', 'would_not_pay']) }).strict();
+
+export interface TravelMetrics {
+  users: number;
+  plans: number;
+  generated_plans: number;
+  events: { kind: string; count: number; failed: number; avg_ms: number }[];
+  /** Median minutes from creating a plan to its first generated trip. */
+  median_minutes_to_trip: number | null;
+  places_per_extraction: number | null;
+  legs: { verified: number; reference: number; unverified: number };
+  price_test: { would_pay: number; would_not_pay: number };
 }

@@ -166,6 +166,24 @@ function createTables(db: Database.Database): void {
       PRIMARY KEY(user_id, suggestion_key)
     );
 
+    CREATE TABLE IF NOT EXISTS travel_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      ok INTEGER NOT NULL,
+      duration_ms INTEGER NOT NULL,
+      detail TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS travel_price_answers (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      plan_id TEXT NOT NULL,
+      choice TEXT NOT NULL CHECK(choice IN ('would_pay', 'would_not_pay')),
+      created_at TEXT NOT NULL,
+      PRIMARY KEY(user_id, plan_id)
+    );
+
     CREATE TABLE IF NOT EXISTS travel_llm_usage (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,

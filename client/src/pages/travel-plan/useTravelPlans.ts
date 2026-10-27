@@ -1,4 +1,4 @@
-import { travelPlanCreateSchema, type TravelPlan } from '@trek/shared'
+import { travelPlanCreateSchema, type TravelMetrics, type TravelPlan } from '@trek/shared'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { travelPlansApi, travelProfileApi } from '../../api/travelPlans'
@@ -11,6 +11,7 @@ export function useTravelPlans() {
   const [form, setForm] = useState<PlanForm>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [metrics, setMetrics] = useState<TravelMetrics | null>(null)
 
   useEffect(() => {
     let active = true
@@ -19,6 +20,10 @@ export function useTravelPlans() {
       .then((list) => { if (active) setPlans(list) })
       .catch(() => { if (active) setError('计划加载失败，请刷新重试。') })
       .finally(() => { if (active) setLoading(false) })
+    travelPlansApi
+      .metrics()
+      .then((data) => { if (active) setMetrics(data) })
+      .catch(() => { /* metrics are an admin extra; the page works without them */ })
     // Start from the traveller's usual pace; anything they have already chosen wins.
     travelProfileApi
       .get()
@@ -48,5 +53,5 @@ export function useTravelPlans() {
     }
   }
 
-  return { plans, loading, form, update, saving, error, create }
+  return { plans, loading, form, update, saving, error, create, metrics }
 }

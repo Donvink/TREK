@@ -21,6 +21,7 @@ import { TransitService } from '../transit/transit.service';
 import { TripsService } from '../trips/trips.service';
 import { buildPool, planCapacity } from './travel-pool';
 import { TravelProfileService } from './travel-profile.service';
+import { TravelMetricsService } from './travel-metrics.service';
 import type { TransitItinerary } from '../transit/transit.helpers';
 import { distributeDays, legRequests, transitCheck, tripDates, walkCheck, zoneOffset, type LegRequest, type Point } from './travel-itinerary';
 import { rainAlternatives } from './travel-weather';
@@ -41,6 +42,7 @@ export class TravelPlansService {
     private readonly assignments: AssignmentsService,
     private readonly dayNotes: DayNotesService,
     private readonly profiles: TravelProfileService,
+    private readonly metrics: TravelMetricsService,
   ) {}
 
   load(userId: number, planId: string): TravelPlan {
@@ -103,8 +105,10 @@ export class TravelPlansService {
   detail(userId: number, planId: string): TravelPlanDetail {
     const plan = this.load(userId, planId);
     const { pool, sources, extractions } = this.pool(userId, plan);
+    const generatedElsewhere = this.list(userId).filter((other) => other.generated_at && other.plan_id !== planId).length;
     return {
       plan,
+      price_test_due: !plan.generated_at && this.metrics.priceTestDue(userId, planId, generatedElsewhere),
       pool,
       sources: sources
         .filter((source) => source.status === 'available')

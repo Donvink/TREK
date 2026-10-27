@@ -6,6 +6,7 @@ import type {
   TravelPlanDetail,
   TravelPlanFocus,
   TravelPlanInput,
+  TravelMetrics,
   TravelProfile,
   TravelProfileView,
 } from '@trek/shared'
@@ -34,6 +35,14 @@ export const travelPlansApi = {
     apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/weather-apply`, { day_index: dayIndex, swaps }, SLOW).then((r) => r.data),
   setHotel: (planId: string, stayIndex: number, query: string) =>
     apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/hotel`, { stay_index: stayIndex, query }, SLOW).then((r) => r.data),
+  answerPriceTest: (planId: string, choice: 'would_pay' | 'would_not_pay') =>
+    apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/price-test`, { choice }).then((r) => r.data),
+  /** Admin only; null for everyone else. */
+  metrics: () =>
+    apiClient.get<TravelMetrics>('/travel-plans/metrics').then((r) => r.data).catch((err: { response?: { status?: number } }) => {
+      if (err.response?.status === 403) return null
+      throw err
+    }),
   generate: (planId: string) => apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/generate`, {}, SLOW).then((r) => r.data),
   extract: (sourceId: string, city: string, refresh: boolean) =>
     apiClient.post<TravelPlaceExtraction>(`/travel-sources/${sourceId}/places/extract`, { city, refresh_map: refresh }, SLOW).then((r) => r.data),

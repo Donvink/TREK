@@ -8,6 +8,8 @@ import { TransitModule } from '../transit/transit.module';
 import { TripsModule } from '../trips/trips.module';
 import { TravelLlmService } from './travel-llm.service';
 import { TravelOcrService } from './travel-ocr.service';
+import { TravelMetricsInterceptor } from './travel-metrics.interceptor';
+import { TravelMetricsService } from './travel-metrics.service';
 import { TravelPlanStayService } from './travel-plan-stay.service';
 import { TravelPlanWeatherService } from './travel-plan-weather.service';
 import { AccommodationsDomainModule } from '../accommodations/accommodations-domain.module';
@@ -23,6 +25,6 @@ import { TravelSourcesService } from './travel-sources.service';
 @Module({
   imports: [MapsModule, WeatherModule, AccommodationsDomainModule, LlmParseModule, TransitModule, TripsModule, PlacesModule, AssignmentsDomainModule, DayNotesModule],
   controllers: [TravelPlansController, TravelProfileController, TravelSourcesController],
-  providers: [TravelSourcesService, TravelPlacesService, TravelLlmService, TravelOcrService, TravelPlansService, TravelProfileService, TravelPlanWeatherService, TravelPlanStayService],
+  providers: [TravelSourcesService, TravelPlacesService, TravelLlmService, TravelOcrService, TravelPlansService, TravelProfileService, TravelPlanWeatherService, TravelPlanStayService, TravelMetricsService, TravelMetricsInterceptor],
 })
 export class TravelSourcesModule {}
