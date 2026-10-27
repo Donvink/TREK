@@ -4,6 +4,7 @@ import {
   travelSourceBatchSchema,
   type StoredTravelSource,
   type TravelSourceBatch,
+  type TravelManualNote,
   type TravelSourceImportResult,
 } from '@trek/shared';
 
@@ -37,6 +38,14 @@ export class TravelSourcesService {
       });
   }
 
+  /** Remove a source with everything derived from it; foreign keys cascade to images, OCR text and extractions. */
+  remove(userId: number, sourceId: string): { deleted: true } {
+    if (!/^[a-f0-9]{24}$/.test(sourceId)) throw new BadRequestException('Invalid source identity');
+    const result = this.db.run('DELETE FROM travel_sources WHERE user_id = ? AND source_id = ?', userId, sourceId);
+    if (!result.changes) throw new NotFoundException('Source not found');
+    return { deleted: true };
+  }
+
   saveImage(userId: number, sourceId: string, imageId: string, data: Buffer) {
     this.validateImageIds(sourceId, imageId);
     const row = this.db.get<{ payload: string }>('SELECT payload FROM travel_sources WHERE user_id = ? AND source_id = ?', userId, sourceId);
@@ -66,6 +75,48 @@ export class TravelSourcesService {
 
   private validateImageIds(sourceId: string, imageId: string) {
     if (!/^[a-f0-9]{24}$/.test(sourceId) || !/^[a-f0-9]{64}$/.test(imageId)) throw new BadRequestException('Invalid image identity');
+  }
+
+  /**
+   * A note the traveller pasted in. A Xiaohongshu or Rednote link with a note id keeps
+   * that id, so the same post imported by the collector later merges with it; without
+   * one the id comes from the text. Only links to those sites are kept.
+   */
+  importManual(userId: number, input: TravelManualNote): { source_id: string; created: boolean } {
+    let url = '';
+    let sourceId: string | null = null;
+    if (input.link) {
+      try {
+        const link = new URL(input.link);
+        const known = ['xiaohongshu.com', 'xhslink.com', 'rednote.com'].some((host) => link.hostname === host || link.hostname.endsWith(`.${host}`));
+        if (link.protocol === 'https:' && known) {
+          sourceId = link.pathname.match(/\/([a-f0-9]{24})\/?$/)?.[1] ?? null;
+          url = sourceId
+            ? (link.hostname.endsWith('rednote.com') ? `https://www.rednote.com/discovery/item/${sourceId}` : `https://www.xiaohongshu.com/explore/${sourceId}`)
+            : `https://${link.hostname}${link.pathname}`;
+        }
+      } catch {
+        throw new BadRequestException('Link is not a valid URL');
+      }
+    }
+    sourceId ??= createHash('sha256').update(`${input.title}\0${input.content}`).digest('hex').slice(0, 24);
+    const collectedAt = new Date().toISOString();
+    const stored: StoredTravelSource = {
+      url, title: input.title, author: null, published_at: null, collected_at: collectedAt,
+      content: input.content, status: 'available', failure_reason: null,
+      images: input.images.map((image) => ({
+        order: image.order, image_id: image.image_id, content_type: image.content_type, status: 'available' as const, failure_reason: null,
+        filename: `${image.image_id}.${image.content_type.slice('image/'.length).replace('jpeg', 'jpg')}`,
+      })),
+      source_id: sourceId, query: '手动导入', content_hash: createHash('sha256').update(input.content).digest('hex'),
+    };
+    const existed = !!this.db.get('SELECT 1 AS found FROM travel_sources WHERE user_id = ? AND source_id = ?', userId, sourceId);
+    this.db.run(
+      'INSERT INTO travel_sources (user_id, source_id, payload, collected_at) VALUES (?, ?, ?, ?) ' +
+        'ON CONFLICT(user_id, source_id) DO UPDATE SET payload = excluded.payload, collected_at = excluded.collected_at',
+      userId, sourceId, JSON.stringify(stored), collectedAt,
+    );
+    return { source_id: sourceId, created: !existed };
   }
 
   importBatch(userId: number, input: TravelSourceBatch): TravelSourceImportResult {

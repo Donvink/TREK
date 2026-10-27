@@ -170,14 +170,18 @@ export default function SourcePlaces({
                 </div>
               ))}
             </div>
-            <a
-              href={extraction.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block text-xs text-accent"
-            >
-              查看信息来源：{note.title} ↗
-            </a>
+            {extraction.source_url ? (
+              <a
+                href={extraction.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-xs text-accent"
+              >
+                查看信息来源：{note.title} ↗
+              </a>
+            ) : (
+              <p className="mt-3 text-xs text-content-muted">信息来源：{note.title}（手动添加）</p>
+            )}
           </div>
         ))}
       </div>

@@ -124,6 +124,8 @@ export const envSchema = z.object({
   // boot rather than degrading into a timeout of zero.
   LLM_TIMEOUT_MS: integer(1, 2_147_483_647, 'must be a whole number of milliseconds between 1 and 2147483647'),
   KITINERARY_EXTRACTOR_PATH: anyString,
+  // The OCR sidecar that reads text out of guide images (deploy/ocr). Unset: no server-side OCR.
+  TREK_OCR_URL: url,
   // The OS search path. Not configuration anybody sets for TREK — it is here so
   // the kitinerary probe can resolve its binary to an absolute path itself
   // instead of handing an unqualified name to exec, which would re-resolve

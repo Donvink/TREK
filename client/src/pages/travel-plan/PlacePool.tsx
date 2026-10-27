@@ -67,9 +67,9 @@ export default function PlacePool({ pool, focus, busy, setFocus, decide }: Props
               ))}
             </ul>
             <div className="mt-1 flex flex-wrap gap-x-3 text-xs">
-              {place.mentions.map((mention) => (
-                <a key={mention.source_id} href={mention.source_url} target="_blank" rel="noopener noreferrer" className="text-accent">{mention.source_title}</a>
-              ))}
+              {place.mentions.map((mention) => mention.source_url
+                ? <a key={mention.source_id} href={mention.source_url} target="_blank" rel="noopener noreferrer" className="text-accent">{mention.source_title}</a>
+                : <span key={mention.source_id} className="text-content-secondary">{mention.source_title}（手动添加）</span>)}
             </div>
             {place.warnings.length > 0 && <p className="mt-1 text-xs text-warning">{place.warnings.join('；')}</p>}
           </li>

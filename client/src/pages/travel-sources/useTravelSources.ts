@@ -1,6 +1,8 @@
 import { travelSourceBatchSchema, type StoredTravelSource, type TravelSourceImportResult } from '@trek/shared';
 import { useEffect, useRef, useState } from 'react';
 import apiClient from '../../api/client';
+import { useManualImport } from './useManualImport';
+import { travelSourcesApi } from '../../api/travelSources';
 
 const MAX_FILE_BYTES = 3 * 1024 * 1024;
 
@@ -136,7 +138,35 @@ export function useTravelSources() {
     }
   }
 
+  async function refresh() {
+    const { data } = await apiClient.get<{ notes: StoredTravelSource[] }>('/travel-sources');
+    setNotes(data.notes);
+  }
+  const manual = useManualImport(refresh);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  /** Two steps: the first click asks, the second deletes the note with its images, OCR text and places. */
+  async function removeSource(sourceId: string) {
+    if (pendingDelete !== sourceId) {
+      setPendingDelete(sourceId);
+      return;
+    }
+    setPendingDelete(null);
+    setError('');
+    try {
+      await travelSourcesApi.remove(sourceId);
+      await refresh();
+      setMessage('已删除这篇攻略及其图片、识别文字和地点。');
+    } catch {
+      setError('删除失败，请重试。');
+    }
+  }
+
   return {
+    manual,
+    pendingDelete,
+    setPendingDelete,
+    removeSource,
     notes,
     loading,
     importing,

@@ -1,8 +1,8 @@
 import type { User } from '../../types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { TravelSourcesService } from './travel-sources.service';
-import { BadRequestException, Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
-import { isImageBytes, travelSourceBatchSchema, travelSourceImageBytesSchema, travelSourceImageTextSchema } from '@trek/shared';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
+import { isImageBytes, travelManualNoteSchema, travelSourceBatchSchema, travelSourceImageBytesSchema, travelSourceImageTextSchema } from '@trek/shared';
 import { travelPlaceExtractionRequestSchema, travelPlaceConfirmRequestSchema, travelPlaceImageIdentitySchema } from '@trek/shared';
 import { TravelPlacesService } from './travel-places.service';
 
@@ -14,6 +14,7 @@ export class TravelPlaceExtractionDto extends createZodDto(travelPlaceExtraction
 export class TravelPlaceConfirmDto extends createZodDto(travelPlaceConfirmRequestSchema) {}
 export class TravelPlaceImageIdentityDto extends createZodDto(travelPlaceImageIdentitySchema) {}
 export class TravelSourceImageTextDto extends createZodDto(travelSourceImageTextSchema) {}
+export class TravelManualNoteDto extends createZodDto(travelManualNoteSchema) {}
 export class TravelSourceImageUploadDto extends createZodDto(travelSourceImageBytesSchema) {}
 
 @Controller('api/travel-sources')
@@ -43,6 +44,12 @@ export class TravelSourcesController {
     return { notes: this.sources.list(user.id) };
   }
 
+  @Post('manual')
+  @HttpCode(200)
+  importManual(@CurrentUser() user: User, @Body() body: TravelManualNoteDto) {
+    return this.sources.importManual(user.id, body);
+  }
+
   @Post('import')
   @HttpCode(200)
   importBatch(@CurrentUser() user: User, @Body() body: TravelSourceImportDto) {
@@ -51,16 +58,30 @@ export class TravelSourcesController {
 
   @Post(':sourceId/images/:imageId')
   @HttpCode(200)
-  saveImage(@CurrentUser() user: User, @Param('sourceId') sourceId: string, @Param('imageId') imageId: string, @Body() body: TravelSourceImageUploadDto) {
+  async saveImage(@CurrentUser() user: User, @Param('sourceId') sourceId: string, @Param('imageId') imageId: string, @Body() body: TravelSourceImageUploadDto) {
     // The pipe has already run the refinement; this narrows the type for the service.
     if (!isImageBytes(body)) throw new BadRequestException('Expected image bytes, at most 8 MB');
-    return this.sources.saveImage(user.id, sourceId, imageId, Buffer.from(body));
+    const saved = this.sources.saveImage(user.id, sourceId, imageId, Buffer.from(body));
+    // Read the text right away when the OCR sidecar runs, so extraction can use it.
+    const ocr = await this.places.readImageText(user.id, sourceId, imageId);
+    return { ...saved, text_read: ocr.read > 0 };
+  }
+
+  @Post(':sourceId/ocr')
+  @HttpCode(200)
+  readImages(@CurrentUser() user: User, @Param('sourceId') sourceId: string) {
+    return this.places.readImageText(user.id, sourceId);
   }
 
   @Post(':sourceId/images/:imageId/text')
   @HttpCode(200)
   saveImageText(@CurrentUser() user: User, @Param('sourceId') sourceId: string, @Param('imageId') imageId: string, @Body() body: TravelSourceImageTextDto) {
     return this.places.saveImageText(user.id, sourceId, imageId, body.engine, body.text);
+  }
+
+  @Delete(':sourceId')
+  remove(@CurrentUser() user: User, @Param('sourceId') sourceId: string) {
+    return this.sources.remove(user.id, sourceId);
   }
 
   @Get(':sourceId/images/:imageId')

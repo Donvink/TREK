@@ -99,6 +99,10 @@ describe('place pool', () => {
 
   it('keys a confirmed place by its map object and sizes plans by pace', () => {
     expect(poolKey(place('A', { selected_candidate_id: 'node:1' }), 'X')).toBe(poolKey(place('B', { selected_candidate_id: 'node:1' }), 'Y'));
+    // One name match to the same map object merges differently written names; an address match does not.
+    const match = (basis: 'name' | 'address') => ({ candidates: [{ candidate_id: 'node:7', name: '', address: '', lat: 1, lng: 1, match_basis: basis, url: '' }] });
+    expect(poolKey(place('家 HOUSE JIA', match('name')), 'T')).toBe(poolKey(place('House Jia', match('name')), 'T'));
+    expect(poolKey(place('Shop A', match('address')), 'T')).not.toBe(poolKey(place('Shop B', match('address')), 'T'));
     expect(planCapacity(1, 'normal')).toBe(2);
     expect(planCapacity(4, 'normal')).toBe(4 + 4 + 2 + 2);
     expect(planCapacity(3, 'relaxed')).toBe(3 + 1 + 1);

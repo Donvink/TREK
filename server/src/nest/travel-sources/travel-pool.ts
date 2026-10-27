@@ -19,9 +19,14 @@ const FOCUS_KINDS: Record<TravelPlanFocus, TravelPlaceKind[]> = {
 const FOCUS_LABELS: Record<TravelPlanFocus, string> = { mixed: '综合', food: '美食', nature: '自然风光', culture: '人文艺术' };
 export const PACE_PER_DAY: Record<TravelPlanPace, number> = { relaxed: 3, normal: 4, packed: 6 };
 
-/** Same place across notes: the confirmed map object when there is one, else the normalised name in that city. */
+/**
+ * Same place across notes: the confirmed map object, else the one map object its name
+ * matched, else the normalised name in that city. An address match does not count: one
+ * building can hold several shops.
+ */
 export function poolKey(place: ExtractedTravelPlace, city: string): string {
-  const identity = place.selected_candidate_id ?? `${normalizeForMatch(place.name)}\0${normalizeForMatch(city)}`;
+  const named = place.candidates.length === 1 && place.candidates[0].match_basis === 'name' ? place.candidates[0].candidate_id : null;
+  const identity = place.selected_candidate_id ?? named ?? `${normalizeForMatch(place.name)}\0${normalizeForMatch(city)}`;
   return createHash('sha256').update(identity).digest('hex').slice(0, 16);
 }
 

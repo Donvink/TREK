@@ -7,6 +7,7 @@ import { PlacesModule } from '../places/places.module';
 import { TransitModule } from '../transit/transit.module';
 import { TripsModule } from '../trips/trips.module';
 import { TravelLlmService } from './travel-llm.service';
+import { TravelOcrService } from './travel-ocr.service';
 import { TravelPlacesService } from './travel-places.service';
 import { TravelPlansController } from './travel-plans.controller';
 import { TravelPlansService } from './travel-plans.service';
@@ -16,6 +17,6 @@ import { TravelSourcesService } from './travel-sources.service';
 @Module({
   imports: [MapsModule, LlmParseModule, TransitModule, TripsModule, PlacesModule, AssignmentsDomainModule, DayNotesModule],
   controllers: [TravelPlansController, TravelSourcesController],
-  providers: [TravelSourcesService, TravelPlacesService, TravelLlmService, TravelPlansService],
+  providers: [TravelSourcesService, TravelPlacesService, TravelLlmService, TravelOcrService, TravelPlansService],
 })
 export class TravelSourcesModule {}

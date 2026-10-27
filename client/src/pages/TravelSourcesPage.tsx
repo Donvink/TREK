@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import PageShell from '../components/Layout/PageShell';
+import ManualImportForm from './travel-sources/ManualImportForm';
 import SourceNoteText from './travel-sources/SourceNoteText';
 import SourcePlaces from './travel-sources/SourcePlaces';
 import { useTravelSources } from './travel-sources/useTravelSources';
@@ -8,6 +9,10 @@ const statusLabels = { available: '已读取 · 尚未核验', missing: '正文�
 
 export default function TravelSourcesPage() {
   const {
+    manual,
+    pendingDelete,
+    setPendingDelete,
+    removeSource,
     notes,
     loading,
     importing,
@@ -35,8 +40,9 @@ export default function TravelSourcesPage() {
         </Link>
         <h1 className="mt-4 text-2xl font-bold">旅行灵感素材</h1>
         <p className="mt-2 text-content-secondary">
-          查看本地自动采集的攻略，保留来源和缺失信息。帖子中的交通、价格与营业时间仍需核验。
+          添加你收藏的攻略，保留来源和缺失信息。帖子中的交通、价格与营业时间仍需核验。整理好后可以去<Link to="/travel-plans" className="text-accent">攻略行程</Link>生成行程。
         </p>
+        <ManualImportForm form={manual} />
         <section className="mt-6 rounded-xl border border-edge bg-surface-card p-5">
           <label htmlFor="travel-source-file" className="block font-semibold">
             导入采集结果
@@ -167,14 +173,27 @@ export default function TravelSourcesPage() {
                     </div>
                   </div>
                 )}
-                <a
-                  href={note.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-block text-sm text-accent"
-                >
-                  查看原帖
-                </a>
+                <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                  <button type="button" onClick={() => void removeSource(note.source_id)}
+                    className={`rounded-lg border px-3 py-1 ${pendingDelete === note.source_id ? 'border-danger bg-danger-soft text-danger' : 'border-edge text-content-secondary'}`}>
+                    {pendingDelete === note.source_id ? '确认删除' : '删除'}
+                  </button>
+                  {pendingDelete === note.source_id && (
+                    <button type="button" onClick={() => setPendingDelete(null)} className="rounded-lg border border-edge px-3 py-1 text-content-secondary">取消</button>
+                  )}
+                </div>
+                {note.url ? (
+                  <a
+                    href={note.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-sm text-accent"
+                  >
+                    查看原帖
+                  </a>
+                ) : (
+                  <p className="mt-3 text-sm text-content-muted">手动添加，没有原帖链接</p>
+                )}
               </article>
             ))}
           </div>

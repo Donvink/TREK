@@ -281,6 +281,7 @@ export function deriveIntegrations(raw: RawEnv) {
     // mirror was still allowed to be working on. See OVERPASS_QUERY_TIMEOUT_S.
     overpassTimeoutMs: positiveNumberOr(raw.OVERPASS_TIMEOUT_MS, 25000),
     kitineraryExtractorPath: raw.KITINERARY_EXTRACTOR_PATH,
+    ocrUrl: raw.TREK_OCR_URL?.trim() ? stripTrailingSlashes(raw.TREK_OCR_URL.trim()) : undefined,
     /**
      * One ceiling for a model call, replacing the three per-client constants
      * that used to disagree. The default is deliberately generous: heavier

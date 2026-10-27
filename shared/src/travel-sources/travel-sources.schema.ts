@@ -87,6 +87,34 @@ export const travelSourceImageTextSchema = z
   })
   .strict();
 
+/**
+ * A note the traveller adds by hand: pasted text, an optional link, and screenshots
+ * described by content hash. The images are uploaded afterwards, one request each.
+ */
+export const travelManualNoteSchema = z
+  .object({
+    title: z.string().trim().min(1).max(500),
+    content: z.string().trim().min(1).max(20000),
+    link: z.string().trim().max(2048).optional(),
+    images: z
+      .array(
+        z
+          .object({
+            order: z.number().int().min(1).max(30),
+            image_id: z.string().regex(/^[a-f0-9]{64}$/),
+            content_type: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+          })
+          .strict(),
+      )
+      .max(30),
+  })
+  .strict()
+  .refine((note) => new Set(note.images.map((image) => image.order)).size === note.images.length, {
+    message: 'Image positions must be unique',
+    path: ['images'],
+  });
+export type TravelManualNote = z.infer<typeof travelManualNoteSchema>;
+
 export type TravelSourceNote = z.infer<typeof travelSourceNoteSchema>;
 export type TravelSourceBatch = z.infer<typeof travelSourceBatchSchema>;
 export type StoredTravelSource = TravelSourceNote & {

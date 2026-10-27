@@ -7,6 +7,7 @@ import { MapsService } from '../maps/maps.service';
 import { extractTravelPlaces } from './extract-travel-places';
 import { buildExtractionPrompt, PLACE_EXTRACTION_SYSTEM, validateExtraction, type ExtractionNote } from './llm-extract-places';
 import { TravelLlmService } from './travel-llm.service';
+import { TravelOcrService } from './travel-ocr.service';
 
 const MAX_PLACES = 12;
 
@@ -21,7 +22,12 @@ export function cityLanguage(city: string): string | undefined {
 
 @Injectable()
 export class TravelPlacesService {
-  constructor(private readonly db: DatabaseService, private readonly maps: MapsService, private readonly llm: TravelLlmService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly maps: MapsService,
+    private readonly llm: TravelLlmService,
+    private readonly ocr: TravelOcrService,
+  ) {}
 
   private source(userId: number, sourceId: string): StoredTravelSource {
     if (!/^[a-f0-9]{24}$/.test(sourceId)) throw new BadRequestException('Invalid source identity');
@@ -168,6 +174,36 @@ export class TravelPlacesService {
       userId, sourceId, imageId, engine, text, new Date().toISOString(),
     );
     return { saved: true };
+  }
+
+  /**
+   * Read text from the saved images of a source through the OCR sidecar: one image, or
+   * every image that has no text yet. Images the sidecar cannot read are counted, not fatal.
+   */
+  async readImageText(userId: number, sourceId: string, imageId?: string): Promise<{ read: number; failed: number }> {
+    if (!/^[a-f0-9]{24}$/.test(sourceId) || (imageId !== undefined && !/^[a-f0-9]{64}$/.test(imageId))) {
+      throw new BadRequestException('Invalid image identity');
+    }
+    this.source(userId, sourceId);
+    if (!this.ocr.enabled()) return { read: 0, failed: 0 };
+    const images = this.db.all<{ image_id: string; content_type: string; data: Buffer }>(
+      'SELECT i.image_id, i.content_type, i.data FROM travel_source_images i ' +
+        'LEFT JOIN travel_source_image_texts t ON t.user_id = i.user_id AND t.source_id = i.source_id AND t.image_id = i.image_id ' +
+        'WHERE i.user_id = ? AND i.source_id = ? AND (i.image_id = ? OR (? IS NULL AND t.image_id IS NULL))',
+      userId, sourceId, imageId ?? null, imageId ?? null,
+    );
+    let read = 0;
+    let failed = 0;
+    for (const image of images) {
+      const text = await this.ocr.read(image.data, image.content_type);
+      if (text === null) {
+        failed++;
+        continue;
+      }
+      this.saveImageText(userId, sourceId, image.image_id, 'rapidocr', text);
+      read++;
+    }
+    return { read, failed };
   }
 
   correctIdentityFromImage(userId: number, sourceId: string, placeId: string, input: z.infer<typeof travelPlaceImageIdentitySchema>): TravelPlaceExtraction {

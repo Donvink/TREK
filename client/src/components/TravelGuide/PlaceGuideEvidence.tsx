@@ -23,10 +23,14 @@ export default function PlaceGuideEvidence({ tripId, placeId, className = '' }: 
       <ul className="flex flex-col gap-1.5">
         {evidence.mentions.map((mention) => (
           <li key={mention.source_id}>
-            <a href={mention.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent">
-              {mention.source_title}
-              <ExternalLink size={11} aria-hidden="true" />
-            </a>
+            {mention.source_url ? (
+              <a href={mention.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent">
+                {mention.source_title}
+                <ExternalLink size={11} aria-hidden="true" />
+              </a>
+            ) : (
+              <span className="text-content-secondary">{mention.source_title}（手动添加）</span>
+            )}
           </li>
         ))}
       </ul>

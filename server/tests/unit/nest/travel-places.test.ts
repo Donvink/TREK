@@ -1,6 +1,7 @@
 import { DatabaseService } from '../../../src/nest/database/database.service';
 import { MapsService } from '../../../src/nest/maps/maps.service';
 import { TravelLlmService } from '../../../src/nest/travel-sources/travel-llm.service';
+import { TravelOcrService } from '../../../src/nest/travel-sources/travel-ocr.service';
 import { TravelPlacesService } from '../../../src/nest/travel-sources/travel-places.service';
 import { TravelSourcesService } from '../../../src/nest/travel-sources/travel-sources.service';
 import { extractTravelPlaces } from '../../../src/nest/travel-sources/extract-travel-places';
@@ -30,7 +31,7 @@ describe('travel place extraction and source provenance', () => {
     const db = new DatabaseService(database);
     sources = new TravelSourcesService(db);
     search = vi.fn().mockResolvedValue([candidate]);
-    places = new TravelPlacesService(db, { searchNominatim: search } as unknown as MapsService, { config: () => null } as unknown as TravelLlmService);
+    places = new TravelPlacesService(db, { searchNominatim: search } as unknown as MapsService, { config: () => null } as unknown as TravelLlmService, { enabled: () => false } as unknown as TravelOcrService);
     sources.importBatch(1, batch());
   });
   afterEach(() => database.close());
@@ -184,7 +185,7 @@ describe('travel place extraction and source provenance', () => {
       json: { places: [{ name: 'Card Bistrot', address: 'Via Card 3, Torino', kind: 'restaurant', sentiment: 'positive', evidence: [{ source: 'image', image: 4, quote: 'Card Bistrot' }] }] },
     });
     const withModel = new TravelPlacesService(new DatabaseService(database), { searchNominatim: search } as unknown as MapsService,
-      { config: () => ({ model: 'gemini-3.1-flash-lite' }), chatJson } as unknown as TravelLlmService);
+      { config: () => ({ model: 'gemini-3.1-flash-lite' }), chatJson } as unknown as TravelLlmService, { enabled: () => false } as unknown as TravelOcrService);
     const result = await withModel.extract(1, sourceId, 'Torino, Italy');
     expect(chatJson.mock.calls[0][3]).toContain('【图4】\nCard Bistrot\nVia Card 3, Torino');
     expect(result).toMatchObject({ version: 3, extractor: 'llm', model: 'gemini-3.1-flash-lite' });
