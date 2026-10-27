@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { travelProfileSchema, type TravelProfile } from '@trek/shared';
+import { travelProfileSchema, type TravelPlaceKind, type TravelProfile } from '@trek/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseService } from '../../../src/nest/database/database.service';
 import { paceFor, suggestFromDecisions, suggestPace, TravelProfileService } from '../../../src/nest/travel-sources/travel-profile.service';
@@ -7,7 +7,7 @@ import { paceFor, suggestFromDecisions, suggestPace, TravelProfileService } from
 vi.mock('../../../src/db/database', () => ({}));
 
 const base: TravelProfile = { likes: ['cafe'], dislikes: [], pace: 'normal', walking: 'medium', avoid: ['排长队'] };
-const decision = (pool_key: string, kind: string, d: 'include' | 'exclude' | null, name = pool_key) => ({ pool_key, kind, decision: d, name });
+const decision = (pool_key: string, kind: TravelPlaceKind, d: 'include' | 'exclude' | null, name = pool_key) => ({ pool_key, kind, decision: d, name });
 
 describe('traveller profile inference', () => {
   it('validates answers and refuses a kind both liked and disliked', () => {
