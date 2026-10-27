@@ -86,7 +86,37 @@ export interface TravelLegCheck {
   summary: string;
   check_url: string;
   checked_at: string;
+  /** Where the first ride leaves from and the last one arrives, when the timetable answered. */
+  departure_stop?: TravelStop | null;
+  arrival_stop?: TravelStop | null;
 }
+
+export interface TravelStop {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+/** Where to sleep in one city: the suggested area, why, and the hotel once booked. */
+export interface TravelStay {
+  city: string;
+  check_in: string;
+  check_out: string;
+  nights: number;
+  day_indexes: number[];
+  area: { name: string; lat: number; lng: number };
+  reasons: string[];
+  booking_url: string;
+  maps_url: string;
+  hotel: { name: string; address: string | null; lat: number; lng: number; place_id: number | null } | null;
+}
+
+export const travelHotelSchema = z
+  .object({
+    stay_index: z.number().int().min(0).max(2),
+    query: z.string().trim().min(2).max(200),
+  })
+  .strict();
 
 export interface TravelPlanDay {
   day_index: number;
@@ -145,6 +175,7 @@ export interface TravelPlan extends TravelPlanInput {
   /** TREK place id of every pooled place written into the trip, rain alternatives included. */
   place_ids?: Record<string, number>;
   weather?: TravelWeatherCheck | null;
+  stays?: TravelStay[];
 }
 
 export interface TravelPlanDetail {

@@ -176,7 +176,9 @@ export function transitCheck(leg: LegRequest, itineraries: TransitItinerary[] | 
       summary: itineraries === null ? '时刻表查询失败，请到官方网站确认' : '这一天查不到公共交通班次，请到官方网站确认',
     };
   }
-  const lines = found.legs.filter((l) => l.mode !== 'WALK').map((l) => l.line ?? l.mode).filter(Boolean);
+  const rides = found.legs.filter((l) => l.mode !== 'WALK');
+  const lines = rides.map((l) => l.line ?? l.mode).filter(Boolean);
+  const stop = (s: { name: string; lat: number; lng: number } | undefined) => (s && Number.isFinite(s.lat) && Number.isFinite(s.lng) ? { name: s.name, lat: s.lat, lng: s.lng } : null);
   return {
     ...base, status: 'verified',
     departure: localClock(found.startTime, timeZone),
@@ -184,5 +186,7 @@ export function transitCheck(leg: LegRequest, itineraries: TransitItinerary[] | 
     duration_minutes: Math.round(found.duration / 60),
     transfers: found.transfers,
     summary: `${lines.join(' → ')}，${found.transfers ? `换乘 ${found.transfers} 次` : '直达'}`,
+    departure_stop: stop(rides[0]?.from),
+    arrival_stop: stop(rides.at(-1)?.to),
   };
 }

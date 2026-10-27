@@ -115,6 +115,32 @@ describe('TravelPlanPage', () => {
     expect(screen.getByText('Museo Egizio', { selector: 'p' })).toBeInTheDocument()
   })
 
+  it('FE-TRAVEL-PLAN-006: suggests where to stay and anchors the booked hotel', async () => {
+    const stay = {
+      city: 'Torino, Italy', check_in: '2026-11-13', check_out: '2026-11-15', nights: 2, day_indexes: [0, 1],
+      area: { name: 'Centro, Torino, Italy', lat: 45.07, lng: 7.68 }, reasons: ['距 Torino Porta Nuova 约 0.8 km', '到这几天的地点平均约 1.2 km'],
+      booking_url: 'https://www.booking.com/searchresults.html?ss=Centro', maps_url: 'https://www.google.com/maps/search/hotels/@45.07,7.68,15z', hotel: null,
+    }
+    const generated = { trip_id: 9, generated_at: '2026-10-27T08:00:00.000Z', days: [], legs: [], unplaced: [], stays: [stay] }
+    let body: unknown = null
+    server.use(
+      http.get(`/api/travel-plans/${planId}`, () => HttpResponse.json(detail(generated))),
+      http.post(`/api/travel-plans/${planId}/hotel`, async ({ request }) => {
+        body = await request.json()
+        return HttpResponse.json(detail({ ...generated, stays: [{ ...stay, hotel: { name: 'Hotel Dock Milano', address: 'Via Cernaia 1', lat: 45.07, lng: 7.67, place_id: 5 } }] }))
+      }),
+    )
+    renderPlan()
+    expect(await screen.findByText('Torino, Italy · 2026-11-13 入住，2026-11-15 退房 · 2 晚')).toBeInTheDocument()
+    expect(screen.getByText('距 Torino Porta Nuova 约 0.8 km · 到这几天的地点平均约 1.2 km')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '在 Booking 搜索这片的酒店 ↗' })).toHaveAttribute('href', stay.booking_url)
+    expect(screen.getByRole('button', { name: '设为住宿' })).toBeDisabled()
+    await userEvent.type(screen.getByLabelText('订好了？'), 'Hotel Dock Milano')
+    await userEvent.click(screen.getByRole('button', { name: '设为住宿' }))
+    await waitFor(() => expect(body).toEqual({ stay_index: 0, query: 'Hotel Dock Milano' }))
+    expect(await screen.findByText('已设为住宿：Hotel Dock Milano（Via Cernaia 1）')).toBeInTheDocument()
+  })
+
   it('FE-TRAVEL-PLAN-003: keeps the plan on screen and says why when generation fails', async () => {
     server.use(
       http.get(`/api/travel-plans/${planId}`, () => HttpResponse.json(detail())),

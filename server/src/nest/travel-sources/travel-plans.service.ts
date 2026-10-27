@@ -9,6 +9,7 @@ import type {
   TravelPlanFocus,
   TravelPlanInput,
   TravelPoolPlace,
+  TravelStay,
 } from '@trek/shared';
 import { randomBytes } from 'node:crypto';
 import { AssignmentsService } from '../assignments/assignments.service';
@@ -23,6 +24,7 @@ import { TravelProfileService } from './travel-profile.service';
 import type { TransitItinerary } from '../transit/transit.helpers';
 import { distributeDays, legRequests, transitCheck, tripDates, walkCheck, zoneOffset, type LegRequest, type Point } from './travel-itinerary';
 import { rainAlternatives } from './travel-weather';
+import { planStays } from './travel-stays';
 
 /** Every corridor in scope runs on Central European time. */
 const CORRIDOR_ZONE = 'Europe/Zurich';
@@ -229,10 +231,30 @@ export class TravelPlansService {
       return tripId;
     });
 
-    Object.assign(plan, { trip_id: tripId, generated_at: checkedAt, days, legs, unplaced, place_ids: Object.fromEntries(placeIds), weather: null });
+    const stays = await this.nameAreas(planStays(days, byKey, legs, plan.travellers));
+    Object.assign(plan, { trip_id: tripId, generated_at: checkedAt, days, legs, unplaced, place_ids: Object.fromEntries(placeIds), weather: null, stays });
     this.save(userId, plan);
     this.signal(userId, planId, 'trip_generated', { trip_id: tripId, included: included.map((place) => place.pool_key) });
     return this.detail(userId, planId);
+  }
+
+  /** A readable name for each suggested area, from the map; the city name when the map has none. */
+  private async nameAreas(stays: TravelStay[]): Promise<TravelStay[]> {
+    for (const stay of stays) {
+      try {
+        const found = await this.maps.reverseGeocode(String(stay.area.lat), String(stay.area.lng), 'en', { lane: 'background' });
+        const parts = found.address?.split(',').map((part) => part.trim()).filter(Boolean) ?? [];
+        // Street, then district: the district is what people search hotels by.
+        const district = parts.find((part) => !/\d/.test(part) && part !== found.name) ?? null;
+        if (district) {
+          stay.area.name = `${district}, ${stay.city}`;
+          stay.booking_url = stay.booking_url.replace(`ss=${encodeURIComponent(stay.city)}`, `ss=${encodeURIComponent(stay.area.name)}`);
+        }
+      } catch (err) {
+        console.warn(`[travel-plans] could not name the area for ${stay.city}: ${(err as Error).message}`);
+      }
+    }
+    return stays;
   }
 
   /** Walk the short legs, ask the timetable for the rest. */

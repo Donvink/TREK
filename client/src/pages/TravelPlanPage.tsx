@@ -3,13 +3,14 @@ import PageShell from '../components/Layout/PageShell'
 import PlacePool from './travel-plan/PlacePool'
 import PlanResult from './travel-plan/PlanResult'
 import SourceList from './travel-plan/SourceList'
+import StayList from './travel-plan/StayList'
 import { FOCUS_OPTIONS } from './travel-plan/travelPlanModel'
 import { useTravelPlan } from './travel-plan/useTravelPlan'
 
 export default function TravelPlanPage() {
   const {
     detail, loading, busy, error, extractCity, setExtractCity,
-    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, included, poolByKey,
+    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, hotelQueries, setHotelQuery, setHotel, included, poolByKey,
   } = useTravelPlan()
 
   return (
@@ -31,6 +32,7 @@ export default function TravelPlanPage() {
             <PlacePool pool={detail.pool} focus={detail.plan.focus} busy={busy} setFocus={setFocus} decide={decide} />
             <PlanResult plan={detail.plan} includedCount={included.length} poolByKey={poolByKey} busy={busy} generate={generate}
               checkWeather={checkWeather} applyWeather={applyWeather} />
+            <StayList stays={detail.plan.stays ?? []} busy={busy} hotelQueries={hotelQueries} setHotelQuery={setHotelQuery} setHotel={setHotel} />
           </>
         )}
       </main>

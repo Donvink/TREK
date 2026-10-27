@@ -32,6 +32,8 @@ export const travelPlansApi = {
   weatherCheck: (planId: string) => apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/weather-check`, {}, SLOW).then((r) => r.data),
   weatherApply: (planId: string, dayIndex: number, swaps: { from_key: string; to_key: string }[]) =>
     apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/weather-apply`, { day_index: dayIndex, swaps }, SLOW).then((r) => r.data),
+  setHotel: (planId: string, stayIndex: number, query: string) =>
+    apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/hotel`, { stay_index: stayIndex, query }, SLOW).then((r) => r.data),
   generate: (planId: string) => apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/generate`, {}, SLOW).then((r) => r.data),
   extract: (sourceId: string, city: string, refresh: boolean) =>
     apiClient.post<TravelPlaceExtraction>(`/travel-sources/${sourceId}/places/extract`, { city, refresh_map: refresh }, SLOW).then((r) => r.data),

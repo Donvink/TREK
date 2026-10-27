@@ -11,6 +11,7 @@ export function useTravelPlan() {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [extractCity, setExtractCity] = useState('')
+  const [hotelQueries, setHotelQueries] = useState<Record<number, string>>({})
 
   useEffect(() => {
     let active = true
@@ -63,6 +64,9 @@ export function useTravelPlan() {
   const decide = (poolKey: string, decision: 'include' | 'exclude' | null) =>
     run(`decide:${poolKey}`, () => travelPlansApi.decide(planId, poolKey, decision), '保存取舍失败。')
   const generate = () => run('generate', () => travelPlansApi.generate(planId), '生成行程失败，请重试。')
+  const setHotelQuery = (stayIndex: number, query: string) => setHotelQueries((current) => ({ ...current, [stayIndex]: query }))
+  const setHotel = (stayIndex: number) =>
+    run(`hotel:${stayIndex}`, () => travelPlansApi.setHotel(planId, stayIndex, (hotelQueries[stayIndex] ?? '').trim()), '找不到这家酒店，请换成完整名称或地址再试。')
   const checkWeather = () => run('weather', () => travelPlansApi.weatherCheck(planId), '天气查询失败，请稍后重试。')
   const applyWeather = (dayIndex: number, swaps: { from_key: string; to_key: string }[]) =>
     run(`weather:${dayIndex}`, () => travelPlansApi.weatherApply(planId, dayIndex, swaps), '替换失败：这一天可能已在行程里改过，请到行程里调整。')
@@ -72,6 +76,6 @@ export function useTravelPlan() {
 
   return {
     detail, loading, busy, error, extractCity, setExtractCity,
-    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, included, poolByKey,
+    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, hotelQueries, setHotelQuery, setHotel, included, poolByKey,
   }
 }
