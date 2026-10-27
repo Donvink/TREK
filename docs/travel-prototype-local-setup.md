@@ -129,11 +129,21 @@ OCR 使用 RapidOCR，纯 CPU 运行，34 张图约 22 秒。只上传识别出�
 
 时刻表只覆盖当前和未来的日期，历史日期的交通会标为未核验。
 
+## 手动添加、画像、天气、住宿
+
+- **手动添加攻略**（`/travel-sources`）：粘贴链接、标题、正文，选择或直接粘贴截图。启动 API 时设置 `TREK_OCR_URL` 指向 OCR 服务，上传时就会自动识别文字。本机可以这样起一个 OCR 服务：`PORT=8765 .local/travel-sources/venv/bin/python deploy/ocr/server.py`，再用 `TREK_OCR_URL=http://127.0.0.1:8765` 启动 API。
+- **旅行画像**（`/travel-profile`）：回答 5 个问题；处理「建议」；查看或删除记录。
+- **天气**：生成行程后，在计划页点「按天气检查」；下雨的那天点「换成室内安排」。
+- **住宿**：计划页「住宿」区块列出推荐区域和搜索链接；订好后填入酒店名，点「设为住宿」。
+- **指标**：管理员在 `/travel-plans` 页底部查看。
+- **部署**：见 [deploy/README.md](../deploy/README.md)。
+
 ## 交通覆盖探测
 
 ```bash
-python3 scripts/travel-sources/probe_transit.py \
+python3 scripts/travel-sources/probe_transit.py --corridor turin \
   --output .local/travel-sources/transit-coverage.json
+# 另有 --corridor munich / venice，--days-ahead 设测试日期
 ```
 
 探测当前数据覆盖，保存实际选择的地点和查询日期。默认 Bellinzona 出发是技术测试；第二个案例的真实出发地仍待明确。结果不证明历史时刻、票价、末班车或全部周边路线都正确。
