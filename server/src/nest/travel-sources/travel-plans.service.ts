@@ -22,6 +22,7 @@ import { buildPool, planCapacity } from './travel-pool';
 import { TravelProfileService } from './travel-profile.service';
 import type { TransitItinerary } from '../transit/transit.helpers';
 import { distributeDays, legRequests, transitCheck, tripDates, walkCheck, zoneOffset, type LegRequest, type Point } from './travel-itinerary';
+import { rainAlternatives } from './travel-weather';
 
 /** Every corridor in scope runs on Central European time. */
 const CORRIDOR_ZONE = 'Europe/Zurich';
@@ -40,14 +41,14 @@ export class TravelPlansService {
     private readonly profiles: TravelProfileService,
   ) {}
 
-  private load(userId: number, planId: string): TravelPlan {
+  load(userId: number, planId: string): TravelPlan {
     if (!/^[a-f0-9]{16}$/.test(planId)) throw new BadRequestException('Invalid plan identity');
     const row = this.db.get<{ payload: string }>('SELECT payload FROM travel_plans WHERE user_id = ? AND plan_id = ?', userId, planId);
     if (!row) throw new NotFoundException('Plan not found');
     return JSON.parse(row.payload);
   }
 
-  private save(userId: number, plan: TravelPlan) {
+  save(userId: number, plan: TravelPlan) {
     plan.updated_at = new Date().toISOString();
     this.db.run(
       'INSERT INTO travel_plans (user_id, plan_id, payload, updated_at) VALUES (?, ?, ?, ?) ' +
@@ -56,7 +57,7 @@ export class TravelPlansService {
     );
   }
 
-  private signal(userId: number, planId: string, kind: string, payload: unknown) {
+  signal(userId: number, planId: string, kind: string, payload: unknown) {
     this.db.run(
       'INSERT INTO travel_preference_signals (user_id, plan_id, kind, payload, created_at) VALUES (?, ?, ?, ?, ?)',
       userId, planId, kind, JSON.stringify(payload), new Date().toISOString(),
@@ -80,7 +81,7 @@ export class TravelPlansService {
       .map((row) => JSON.parse(row.payload));
   }
 
-  private pool(userId: number, plan: TravelPlan): { pool: TravelPoolPlace[]; sources: StoredTravelSource[]; extractions: TravelPlaceExtraction[] } {
+  pool(userId: number, plan: TravelPlan): { pool: TravelPoolPlace[]; sources: StoredTravelSource[]; extractions: TravelPlaceExtraction[] } {
     const sources = this.db
       .all<{ payload: string }>('SELECT payload FROM travel_sources WHERE user_id = ? ORDER BY collected_at DESC', userId)
       .map((row) => JSON.parse(row.payload) as StoredTravelSource);
@@ -162,7 +163,12 @@ export class TravelPlansService {
     if (!included.length) throw new BadRequestException('No places included');
 
     const dates = tripDates(plan.start_date, plan.end_date);
-    const { days, unplaced } = distributeDays(dates, plan.destinations, pool, plan.pace);
+    const distributed = distributeDays(dates, plan.destinations, pool, plan.pace);
+    const days = rainAlternatives(distributed.days, pool);
+    const { unplaced } = distributed;
+    // Rain alternatives go into the trip too, unscheduled, so a swap only has to move them.
+    const alternativeKeys = new Set(days.flatMap((day) => Object.values(day.rain_alternatives ?? {})));
+    const written = pool.filter((place) => place.included || alternativeKeys.has(place.pool_key));
     const byKey = new Map(pool.map((place) => [place.pool_key, place]));
     const placeNames = new Set(pool.map((place) => place.name));
 
@@ -173,19 +179,9 @@ export class TravelPlansService {
       if (point) cities.set(city, point);
     }
     const checkedAt = new Date().toISOString();
-    const { walking } = this.profiles.preferences(userId);
-    const legs: TravelLegCheck[] = [];
-    if (originPoint) {
-      for (const leg of legRequests(days, byKey, { name: plan.origin, point: originPoint }, cities)) {
-        const walk = walkCheck(leg, checkedAt, walking);
-        if (walk) {
-          legs.push(walk);
-          continue;
-        }
-        legs.push(transitCheck(leg, await this.timetable(leg, userId), CORRIDOR_ZONE, checkedAt));
-      }
-    }
+    const legs = originPoint ? await this.checkLegs(legRequests(days, byKey, { name: plan.origin, point: originPoint }, cities), userId, checkedAt) : [];
 
+    const placeIds = new Map<string, number>();
     // One write: a failure part way leaves no half-built trip behind.
     const tripId = this.db.transaction(() => {
       const { tripId } = this.trips.create(userId, {
@@ -195,15 +191,14 @@ export class TravelPlansService {
         end_date: plan.end_date,
       });
       const tripDays = this.db.all<{ id: number }>('SELECT id FROM days WHERE trip_id = ? ORDER BY day_number ASC', tripId);
-      const placeIds = new Map<string, number>();
-      for (const place of included) {
+      for (const place of written) {
         const created = this.places.create(String(tripId), {
           name: place.name,
           lat: place.lat ?? undefined,
           lng: place.lng ?? undefined,
           address: place.address ?? undefined,
           osm_id: place.osm_id ?? undefined,
-          notes: `攻略依据：${place.mentions.length} 篇帖子。${place.location_status === 'confirmed' ? '' : '地图位置未经确认。'}`,
+          notes: `攻略依据：${place.mentions.length} 篇帖子。${place.location_status === 'confirmed' ? '' : '地图位置未经确认。'}${place.included ? '' : '雨天备选，下雨时可替换户外安排。'}`,
         }) as { id: number };
         placeIds.set(place.pool_key, created.id);
         const evidence: TravelPlaceGuideEvidence = {
@@ -234,10 +229,20 @@ export class TravelPlansService {
       return tripId;
     });
 
-    Object.assign(plan, { trip_id: tripId, generated_at: checkedAt, days, legs, unplaced });
+    Object.assign(plan, { trip_id: tripId, generated_at: checkedAt, days, legs, unplaced, place_ids: Object.fromEntries(placeIds), weather: null });
     this.save(userId, plan);
     this.signal(userId, planId, 'trip_generated', { trip_id: tripId, included: included.map((place) => place.pool_key) });
     return this.detail(userId, planId);
+  }
+
+  /** Walk the short legs, ask the timetable for the rest. */
+  async checkLegs(requests: LegRequest[], userId: number, checkedAt: string): Promise<TravelLegCheck[]> {
+    const { walking } = this.profiles.preferences(userId);
+    const legs: TravelLegCheck[] = [];
+    for (const leg of requests) {
+      legs.push(walkCheck(leg, checkedAt, walking) ?? transitCheck(leg, await this.timetable(leg, userId), CORRIDOR_ZONE, checkedAt));
+    }
+    return legs;
   }
 
   /** Connections for a leg; null when the timetable could not be asked, which the check reports as unverified. */

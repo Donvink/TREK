@@ -115,21 +115,21 @@ export function legRequests(
     const cityPoint = cities.get(day.city);
     const previousCity = i === 0 ? null : days[i - 1].city;
     if (cityPoint && i === 0) {
-      legs.push({ day_index: i, date: day.date, from_name: origin.name, to_name: day.city, from: origin.point, to: cityPoint, time: '08:00' });
+      legs.push({ day_index: day.day_index, date: day.date, from_name: origin.name, to_name: day.city, from: origin.point, to: cityPoint, time: '08:00' });
     } else if (cityPoint && previousCity && previousCity !== day.city && cities.get(previousCity)) {
-      legs.push({ day_index: i, date: day.date, from_name: previousCity, to_name: day.city, from: cities.get(previousCity)!, to: cityPoint, time: '09:00' });
+      legs.push({ day_index: day.day_index, date: day.date, from_name: previousCity, to_name: day.city, from: cities.get(previousCity)!, to: cityPoint, time: '09:00' });
     }
     const stops = day.pool_keys.map((key) => places.get(key)).filter((p): p is TravelPoolPlace => !!p && p.lat !== null && p.lng !== null);
     stops.slice(1).forEach((stop, n) => {
       const from = stops[n];
       legs.push({
-        day_index: i, date: day.date, from_name: from.name, to_name: stop.name,
+        day_index: day.day_index, date: day.date, from_name: from.name, to_name: stop.name,
         from: { lat: from.lat!, lng: from.lng! }, to: { lat: stop.lat!, lng: stop.lng! },
         time: `${String(10 + 2 * n).padStart(2, '0')}:00`,
       });
     });
     if (cityPoint && i === days.length - 1) {
-      legs.push({ day_index: i, date: day.date, from_name: day.city, to_name: origin.name, from: cityPoint, to: origin.point, time: '16:00' });
+      legs.push({ day_index: day.day_index, date: day.date, from_name: day.city, to_name: origin.name, from: cityPoint, to: origin.point, time: '16:00' });
     }
   });
   return legs;

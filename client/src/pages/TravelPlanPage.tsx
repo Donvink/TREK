@@ -9,7 +9,7 @@ import { useTravelPlan } from './travel-plan/useTravelPlan'
 export default function TravelPlanPage() {
   const {
     detail, loading, busy, error, extractCity, setExtractCity,
-    extract, extractPending, setFocus, decide, generate, included, poolByKey,
+    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, included, poolByKey,
   } = useTravelPlan()
 
   return (
@@ -29,7 +29,8 @@ export default function TravelPlanPage() {
             <SourceList sources={detail.sources} destinations={detail.plan.destinations} extractCity={extractCity} setExtractCity={setExtractCity}
               busy={busy} extract={extract} extractPending={extractPending} />
             <PlacePool pool={detail.pool} focus={detail.plan.focus} busy={busy} setFocus={setFocus} decide={decide} />
-            <PlanResult plan={detail.plan} includedCount={included.length} poolByKey={poolByKey} busy={busy} generate={generate} />
+            <PlanResult plan={detail.plan} includedCount={included.length} poolByKey={poolByKey} busy={busy} generate={generate}
+              checkWeather={checkWeather} applyWeather={applyWeather} />
           </>
         )}
       </main>

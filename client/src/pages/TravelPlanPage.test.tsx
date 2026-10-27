@@ -88,6 +88,33 @@ describe('TravelPlanPage', () => {
     expect(screen.getByText('未核验')).toBeInTheDocument()
   })
 
+  it('FE-TRAVEL-PLAN-005: checks the weather and swaps a wet day for the prepared indoor place', async () => {
+    const outdoor = poolPlace('3'.repeat(16), 'Superga', { kind: 'nature' })
+    const indoor = poolPlace('4'.repeat(16), 'Museo Egizio', { kind: 'museum', included: false, recommended: false })
+    const day = { day_index: 0, date: '2026-11-13', city: 'Torino, Italy', pool_keys: [outdoor.pool_key], rain_alternatives: { [outdoor.pool_key]: indoor.pool_key } }
+    const generated = { trip_id: 9, generated_at: '2026-10-27T08:00:00.000Z', days: [day], legs: [], unplaced: [] }
+    const swap = { from_key: outdoor.pool_key, from_name: 'Superga', to_key: indoor.pool_key, to_name: 'Museo Egizio' }
+    const weather = { checked_at: '2026-10-27T09:00:00.000Z', days: [{ day_index: 0, date: '2026-11-13', city: 'Torino, Italy', status: 'forecast', summary: '雨，6–10°C，降水概率 90%', rainy: true, swaps: [swap] }] }
+    let applied: unknown = null
+    server.use(
+      http.get(`/api/travel-plans/${planId}`, () => HttpResponse.json(detail(generated, [outdoor, indoor]))),
+      http.post(`/api/travel-plans/${planId}/weather-check`, () => HttpResponse.json(detail({ ...generated, weather }, [outdoor, indoor]))),
+      http.post(`/api/travel-plans/${planId}/weather-apply`, async ({ request }) => {
+        applied = await request.json()
+        return HttpResponse.json(detail({ ...generated, days: [{ ...day, pool_keys: [indoor.pool_key], rain_alternatives: {} }], weather: { ...weather, days: [{ ...weather.days[0], swaps: [] }] } }, [outdoor, indoor]))
+      }),
+    )
+    renderPlan()
+    expect(await screen.findByText('雨天备选：Superga → Museo Egizio')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '按天气检查' }))
+    expect(await screen.findByText('天气预报：雨，6–10°C，降水概率 90%')).toBeInTheDocument()
+    expect(screen.getByText('建议：Superga 换成 Museo Egizio')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '换成室内安排' }))
+    await waitFor(() => expect(applied).toEqual({ day_index: 0, swaps: [{ from_key: outdoor.pool_key, to_key: indoor.pool_key }] }))
+    expect(await screen.findByText('这一天没有准备好的室内备选，可以在行程里自己调整。')).toBeInTheDocument()
+    expect(screen.getByText('Museo Egizio', { selector: 'p' })).toBeInTheDocument()
+  })
+
   it('FE-TRAVEL-PLAN-003: keeps the plan on screen and says why when generation fails', async () => {
     server.use(
       http.get(`/api/travel-plans/${planId}`, () => HttpResponse.json(detail())),

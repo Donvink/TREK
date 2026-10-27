@@ -8,5 +8,6 @@ import { WeatherMcp } from './weather.mcp';
 @Module({
   controllers: [WeatherController],
   providers: [WeatherService, WeatherMcp, WeatherRpc],
+  exports: [WeatherService],
 })
 export class WeatherModule {}

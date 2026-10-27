@@ -63,12 +63,15 @@ export function useTravelPlan() {
   const decide = (poolKey: string, decision: 'include' | 'exclude' | null) =>
     run(`decide:${poolKey}`, () => travelPlansApi.decide(planId, poolKey, decision), '保存取舍失败。')
   const generate = () => run('generate', () => travelPlansApi.generate(planId), '生成行程失败，请重试。')
+  const checkWeather = () => run('weather', () => travelPlansApi.weatherCheck(planId), '天气查询失败，请稍后重试。')
+  const applyWeather = (dayIndex: number, swaps: { from_key: string; to_key: string }[]) =>
+    run(`weather:${dayIndex}`, () => travelPlansApi.weatherApply(planId, dayIndex, swaps), '替换失败：这一天可能已在行程里改过，请到行程里调整。')
 
   const included = useMemo(() => detail?.pool.filter((place) => place.included) ?? [], [detail])
   const poolByKey = useMemo(() => new Map((detail?.pool ?? []).map((place) => [place.pool_key, place])), [detail])
 
   return {
     detail, loading, busy, error, extractCity, setExtractCity,
-    extract, extractPending, setFocus, decide, generate, included, poolByKey,
+    extract, extractPending, setFocus, decide, generate, checkWeather, applyWeather, included, poolByKey,
   }
 }

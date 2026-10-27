@@ -93,7 +93,44 @@ export interface TravelPlanDay {
   date: string;
   city: string;
   pool_keys: string[];
+  /** Outdoor place on this day → the indoor place nearby to take in the rain. */
+  rain_alternatives?: Record<string, string>;
 }
+
+export interface TravelWeatherSwap {
+  from_key: string;
+  from_name: string;
+  to_key: string;
+  to_name: string;
+}
+
+export interface TravelWeatherDay {
+  day_index: number;
+  date: string;
+  city: string;
+  /** `forecast` within the forecast window; `climate` is a same-date average, never a forecast. */
+  status: 'forecast' | 'climate' | 'unavailable';
+  summary: string;
+  rainy: boolean;
+  swaps: TravelWeatherSwap[];
+}
+
+export interface TravelWeatherCheck {
+  checked_at: string;
+  days: TravelWeatherDay[];
+}
+
+export const travelWeatherApplySchema = z
+  .object({
+    day_index: z.number().int().min(0).max(13),
+    swaps: z
+      .array(
+        z.object({ from_key: z.string().regex(/^[a-f0-9]{16}$/), to_key: z.string().regex(/^[a-f0-9]{16}$/) }).strict(),
+      )
+      .min(1)
+      .max(10),
+  })
+  .strict();
 
 export interface TravelPlan extends TravelPlanInput {
   plan_id: string;
@@ -105,6 +142,9 @@ export interface TravelPlan extends TravelPlanInput {
   legs: TravelLegCheck[];
   /** Pooled places left out of the day plan, with the reason. */
   unplaced: { pool_key: string; reason: string }[];
+  /** TREK place id of every pooled place written into the trip, rain alternatives included. */
+  place_ids?: Record<string, number>;
+  weather?: TravelWeatherCheck | null;
 }
 
 export interface TravelPlanDetail {

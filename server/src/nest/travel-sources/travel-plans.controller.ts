@@ -1,18 +1,20 @@
 import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
-import { travelPlanCreateSchema, travelPlanFocusSchema, travelPoolDecisionSchema } from '@trek/shared';
+import { travelPlanCreateSchema, travelPlanFocusSchema, travelPoolDecisionSchema, travelWeatherApplySchema } from '@trek/shared';
 import { createZodDto } from 'nestjs-zod';
 import type { User } from '../../types';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { TravelPlanWeatherService } from './travel-plan-weather.service';
 import { TravelPlansService } from './travel-plans.service';
 
 export class TravelPlanCreateDto extends createZodDto(travelPlanCreateSchema) {}
 export class TravelPlanFocusDto extends createZodDto(travelPlanFocusSchema) {}
 export class TravelPoolDecisionDto extends createZodDto(travelPoolDecisionSchema) {}
+export class TravelWeatherApplyDto extends createZodDto(travelWeatherApplySchema) {}
 
 /** Online-only prototype surface: plans built from imported guides, and the evidence behind generated places. */
 @Controller('api/travel-plans')
 export class TravelPlansController {
-  constructor(private readonly plans: TravelPlansService) {}
+  constructor(private readonly plans: TravelPlansService, private readonly weather: TravelPlanWeatherService) {}
 
   @Get()
   list(@CurrentUser() user: User) {
@@ -47,6 +49,18 @@ export class TravelPlansController {
   @HttpCode(200)
   decide(@CurrentUser() user: User, @Param('planId') planId: string, @Body() body: TravelPoolDecisionDto) {
     return this.plans.decide(user.id, planId, body.pool_key, body.decision);
+  }
+
+  @Post(':planId/weather-check')
+  @HttpCode(200)
+  weatherCheck(@CurrentUser() user: User, @Param('planId') planId: string) {
+    return this.weather.check(user.id, planId);
+  }
+
+  @Post(':planId/weather-apply')
+  @HttpCode(200)
+  weatherApply(@CurrentUser() user: User, @Param('planId') planId: string, @Body() body: TravelWeatherApplyDto) {
+    return this.weather.apply(user.id, planId, body.day_index, body.swaps);
   }
 
   @Post(':planId/generate')

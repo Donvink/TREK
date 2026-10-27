@@ -1,4 +1,4 @@
-import type { TravelPlan, TravelPoolPlace } from '@trek/shared'
+import type { TravelPlan, TravelPoolPlace, TravelWeatherDay } from '@trek/shared'
 import { Link } from 'react-router'
 import LegCheckRow from '../../components/TravelGuide/LegCheckRow'
 
@@ -8,10 +8,13 @@ interface Props {
   poolByKey: Map<string, TravelPoolPlace>
   busy: string | null
   generate: () => void
+  checkWeather: () => void
+  applyWeather: (dayIndex: number, swaps: { from_key: string; to_key: string }[]) => void
 }
 
 /** Generate the trip, then show what went where and how each journey was checked. */
-export default function PlanResult({ plan, includedCount, poolByKey, busy, generate }: Props) {
+export default function PlanResult({ plan, includedCount, poolByKey, busy, generate, checkWeather, applyWeather }: Props) {
+  const weatherFor = (dayIndex: number) => plan.weather?.days.find((d) => d.day_index === dayIndex)
   const counts = plan.legs.reduce((acc, leg) => ({ ...acc, [leg.status]: (acc[leg.status] ?? 0) + 1 }), {} as Record<string, number>)
   return (
     <section className="mt-6 rounded-xl border border-edge bg-surface-card p-5">
@@ -25,6 +28,11 @@ export default function PlanResult({ plan, includedCount, poolByKey, busy, gener
           {busy === 'generate' ? '生成中，正在查询交通…' : plan.trip_id ? '重新生成（新建一个行程）' : '生成行程'}
         </button>
         {plan.trip_id && <Link to={`/trips/${plan.trip_id}`} className="text-accent">打开生成的行程 →</Link>}
+        {plan.trip_id && (
+          <button type="button" onClick={checkWeather} disabled={busy !== null} className="rounded-lg border border-edge px-3 py-2 text-sm text-content-secondary disabled:opacity-60">
+            {busy === 'weather' ? '查询天气中…' : '按天气检查'}
+          </button>
+        )}
       </div>
 
       {plan.generated_at && (
@@ -39,6 +47,12 @@ export default function PlanResult({ plan, includedCount, poolByKey, busy, gener
                 <p className="text-sm text-content-secondary">
                   {day.pool_keys.length ? day.pool_keys.map((key) => poolByKey.get(key)?.name ?? '（已移出地点池）').join(' → ') : '没有安排地点'}
                 </p>
+                {Object.entries(day.rain_alternatives ?? {}).length > 0 && (
+                  <p className="text-xs text-content-muted">
+                    雨天备选：{Object.entries(day.rain_alternatives ?? {}).map(([from, to]) => `${poolByKey.get(from)?.name ?? from} → ${poolByKey.get(to)?.name ?? to}`).join('；')}
+                  </p>
+                )}
+                {weatherFor(day.day_index) && <WeatherLine day={weatherFor(day.day_index)!} busy={busy} apply={(swaps) => applyWeather(day.day_index, swaps)} />}
                 <ul className="mt-1.5 flex flex-col gap-1.5">
                   {plan.legs.filter((leg) => leg.day_index === day.day_index).map((leg, i) => <LegCheckRow key={i} leg={leg} />)}
                 </ul>
@@ -56,5 +70,24 @@ export default function PlanResult({ plan, includedCount, poolByKey, busy, gener
         </div>
       )}
     </section>
+  )
+}
+
+/** The day's weather, and the swaps to make if it looks wet. */
+function WeatherLine({ day, busy, apply }: { day: TravelWeatherDay; busy: string | null; apply: (swaps: { from_key: string; to_key: string }[]) => void }) {
+  return (
+    <div className={`mt-1 rounded-lg px-3 py-2 text-sm ${day.rainy ? 'bg-warning-soft' : 'bg-surface-hover'}`}>
+      <span className="text-content">{day.status === 'forecast' ? '天气预报' : day.status === 'climate' ? '历史同期参考' : '天气'}：{day.summary}</span>
+      {day.swaps.length > 0 && (
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <span className="text-content-secondary">建议：{day.swaps.map((s) => `${s.from_name} 换成 ${s.to_name}`).join('；')}</span>
+          <button type="button" disabled={busy !== null} onClick={() => apply(day.swaps.map(({ from_key, to_key }) => ({ from_key, to_key })))}
+            className="rounded-lg bg-accent px-3 py-1 text-xs text-accent-text disabled:opacity-60">
+            {busy === `weather:${day.day_index}` ? '替换中…' : '换成室内安排'}
+          </button>
+        </div>
+      )}
+      {day.rainy && day.swaps.length === 0 && <div className="mt-1 text-xs text-content-secondary">这一天没有准备好的室内备选，可以在行程里自己调整。</div>}
+    </div>
   )
 }

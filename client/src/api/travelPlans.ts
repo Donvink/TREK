@@ -29,6 +29,9 @@ export const travelPlansApi = {
     apiClient.patch<TravelPlanDetail>(`/travel-plans/${planId}/focus`, { focus }).then((r) => r.data),
   decide: (planId: string, poolKey: string, decision: 'include' | 'exclude' | null) =>
     apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/decisions`, { pool_key: poolKey, decision }).then((r) => r.data),
+  weatherCheck: (planId: string) => apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/weather-check`, {}, SLOW).then((r) => r.data),
+  weatherApply: (planId: string, dayIndex: number, swaps: { from_key: string; to_key: string }[]) =>
+    apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/weather-apply`, { day_index: dayIndex, swaps }, SLOW).then((r) => r.data),
   generate: (planId: string) => apiClient.post<TravelPlanDetail>(`/travel-plans/${planId}/generate`, {}, SLOW).then((r) => r.data),
   extract: (sourceId: string, city: string, refresh: boolean) =>
     apiClient.post<TravelPlaceExtraction>(`/travel-sources/${sourceId}/places/extract`, { city, refresh_map: refresh }, SLOW).then((r) => r.data),
