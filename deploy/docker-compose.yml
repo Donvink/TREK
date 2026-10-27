@@ -1,0 +1,88 @@
+# Guide-planning prototype on one small VPS: TREK built from this branch, the OCR
+# sidecar on the private network, and Caddy in front for HTTPS.
+# Usage: copy .env.example to .env, fill it in, then `docker compose up -d --build`.
+services:
+  app:
+    # The fork's features are not in the published image, so it is built from the repo.
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: trek-guides:local
+    container_name: trek
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=128m
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+      - TZ=${TZ:-Europe/Zurich}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ALLOWED_ORIGINS=https://${TREK_DOMAIN:?set TREK_DOMAIN in .env}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      - TREK_OCR_URL=http://ocr:8000
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    # Not published: only Caddy reaches it.
+    expose:
+      - "3000"
+    depends_on:
+      - ocr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  ocr:
+    build: ./ocr
+    image: trek-ocr:local
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+    # Private: never published on the host. It keeps no images.
+    expose:
+      - "8000"
+    mem_limit: 1g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - TREK_DOMAIN=${TREK_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -36,3 +36,8 @@ server/vitest.config.ts
 **/*.spec.ts
 scripts/
 charts/
+
+# Local prototype data: login session, test account, collected posts. Never part of a build.
+.local
+deploy/data
+deploy/uploads

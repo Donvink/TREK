@@ -1,0 +1,5 @@
+# Caddy fetches and renews the certificate for TREK_DOMAIN and proxies WebSockets on its own.
+{$TREK_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
